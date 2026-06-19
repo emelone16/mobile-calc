@@ -1,0 +1,907 @@
+[
+  {
+    "attacker": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Tyranitar",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 82.3,
+    "maxPct": 97.1
+  },
+  {
+    "attacker": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Hippowdon",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 36.6,
+    "maxPct": 44.3
+  },
+  {
+    "attacker": {
+      "species": "Tyranitar",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "defender": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "move": "Stone Edge",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 23,
+    "maxPct": 26.8
+  },
+  {
+    "attacker": {
+      "species": "Tyranitar",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "defender": {
+      "species": "Salamence",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "move": "Stone Edge",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 112.9,
+    "maxPct": 134.1
+  },
+  {
+    "attacker": {
+      "species": "Salamence",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Tyranitar",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 57.1,
+    "maxPct": 67.4
+  },
+  {
+    "attacker": {
+      "species": "Gyarados",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Waterfall"
+      ]
+    },
+    "defender": {
+      "species": "Heatran",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Waterfall"
+      ]
+    },
+    "move": "Waterfall",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 69.9,
+    "maxPct": 83.1
+  },
+  {
+    "attacker": {
+      "species": "Snorlax",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Body Slam"
+      ]
+    },
+    "defender": {
+      "species": "Blissey",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Body Slam"
+      ]
+    },
+    "move": "Body Slam",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 69.4,
+    "maxPct": 81.8
+  },
+  {
+    "attacker": {
+      "species": "Machamp",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Cross Chop"
+      ]
+    },
+    "defender": {
+      "species": "Snorlax",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Cross Chop"
+      ]
+    },
+    "move": "Cross Chop",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 92.8,
+    "maxPct": 110.6
+  },
+  {
+    "attacker": {
+      "species": "Swampert",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Heatran",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 154.2,
+    "maxPct": 183.1
+  },
+  {
+    "attacker": {
+      "species": "Dragonite",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Outrage"
+      ]
+    },
+    "defender": {
+      "species": "Salamence",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Outrage"
+      ]
+    },
+    "move": "Outrage",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 135.3,
+    "maxPct": 160
+  },
+  {
+    "attacker": {
+      "species": "Weavile",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Ice Punch"
+      ]
+    },
+    "defender": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Ice Punch"
+      ]
+    },
+    "move": "Ice Punch",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 126.8,
+    "maxPct": 150.8
+  },
+  {
+    "attacker": {
+      "species": "Mamoswine",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Ice Shard"
+      ]
+    },
+    "defender": {
+      "species": "Salamence",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Ice Shard"
+      ]
+    },
+    "move": "Ice Shard",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 91.8,
+    "maxPct": 108.2
+  },
+  {
+    "attacker": {
+      "species": "Porygon-Z",
+      "level": 50,
+      "nature": "Modest",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Tri Attack"
+      ]
+    },
+    "defender": {
+      "species": "Snorlax",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Tri Attack"
+      ]
+    },
+    "move": "Tri Attack",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 34,
+    "maxPct": 40.9
+  },
+  {
+    "attacker": {
+      "species": "Rhyperior",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Heatran",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 190.4,
+    "maxPct": 226.5
+  },
+  {
+    "attacker": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "Choice Band",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {
+        "at": 252
+      },
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "defender": {
+      "species": "Hippowdon",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Earthquake"
+      ]
+    },
+    "move": "Earthquake",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 67.2,
+    "maxPct": 79.2
+  },
+  {
+    "attacker": {
+      "species": "Tyranitar",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "Choice Band",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {
+        "at": 252
+      },
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "defender": {
+      "species": "Salamence",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {
+        "hp": 252,
+        "df": 4
+      },
+      "moves": [
+        "Stone Edge"
+      ]
+    },
+    "move": "Stone Edge",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 169.3,
+    "maxPct": 200
+  },
+  {
+    "attacker": {
+      "species": "Snorlax",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Body Slam"
+      ]
+    },
+    "defender": {
+      "species": "Skarmory",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {
+        "hp": 252,
+        "df": 252
+      },
+      "moves": [
+        "Body Slam"
+      ]
+    },
+    "move": "Body Slam",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 10.5,
+    "maxPct": 12.2
+  },
+  {
+    "attacker": {
+      "species": "Machamp",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Cross Chop"
+      ]
+    },
+    "defender": {
+      "species": "Skarmory",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Cross Chop"
+      ]
+    },
+    "move": "Cross Chop",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 41.4,
+    "maxPct": 50
+  },
+  {
+    "attacker": {
+      "species": "Mamoswine",
+      "level": 50,
+      "nature": "Adamant",
+      "ability": "",
+      "item": "Life Orb",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {
+        "at": 252
+      },
+      "moves": [
+        "Ice Shard"
+      ]
+    },
+    "defender": {
+      "species": "Garchomp",
+      "level": 50,
+      "nature": "Hardy",
+      "ability": "",
+      "item": "",
+      "ivs": {
+        "hp": 31,
+        "at": 31,
+        "df": 31,
+        "sa": 31,
+        "sd": 31,
+        "sp": 31
+      },
+      "evs": {},
+      "moves": [
+        "Ice Shard"
+      ]
+    },
+    "move": "Ice Shard",
+    "field": {
+      "gravity": false,
+      "crit": false
+    },
+    "minPct": 111.5,
+    "maxPct": 133.3
+  }
+]
