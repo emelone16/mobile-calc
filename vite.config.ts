@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa'
 // IMPORTANT for GitHub Pages: set base to '/<repo-name>/' unless using a
 // custom domain or a <user>.github.io root repo. Wrong base => broken asset
 // and service-worker paths. Override via DCM_BASE env in CI if needed.
-const base = process.env.DCM_BASE ?? '/dynamic-calc-mobile/'
+const base = process.env.DCM_BASE ?? '/mobile-calc/'
 
 export default defineConfig({
   base,

@@ -2,14 +2,28 @@
 
 A mobile-first, offline PWA rebuild of the Renegade Platinum trainer/damage calculator, hosted on GitHub Pages with **no server**. Damage math is the upstream `@smogon/calc` engine fed a custom ROM-hack data layer; `.sav` import is pure client-side binary parsing.
 
-This repo is a **handoff scaffold**: real tooling/config, complete type contracts, and stubbed modules with explicit `TODO`s. It is not yet a working app. The build order, every TODO, and where the source-of-truth lives are in **[HANDOFF.md](./HANDOFF.md)** — read that first.
+The original handoff scaffold has been **implemented**: the engine adapter, frozen data layer, gen-4 `.sav` reader, clipboard import, gen-4 AI preview, and the mobile UI are all in place, with the bundled RP data shipped at `public/data/renegade-platinum.json`. Design rationale lives in the design doc; the original milestone list is in **[HANDOFF.md](./HANDOFF.md)**.
+
+Status by milestone:
+
+- **M1 Engine integration** — `@smogon/calc` Generations adapter overlays RP species/move data over vanilla, gen-6 type chart over gen-4 damage; memoized id→name maps.
+- **M2 Data layer** — RP bundle → frozen `GameData` + `TrainerIndex`; platinum-formes merge.
+- **M3 Calc parity** — 19 independent-oracle parity fixtures + smoke/immunity assertions, green.
+- **M4 Calc UI** — bottom-sheet pickers, EV/IV editor, sticky result bar with secondary move rolls.
+- **M5 Trainers + Box** — location-grouped trainer browser, clipboard import, box persistence/export.
+- **M6 Save import** — gen-4 DPPt reader in a Web Worker, review sheet, round-trip test net.
+- **M7 AI preview** — gen-4 damage-score switch-in/threat ranking.
+- **M8 PWA + Pages** — base path, icons, `vite-plugin-pwa` precache, GitHub Action deploy.
+- **M9 Design pass** — token system replacing placeholder styles.
+- **M10 Multi-hack** — generalized `loadHack`/`HACKS` registry (RP ships first).
 
 ## Run
 
 ```bash
 npm install
-# drop your generated bundle at public/data/renegade-platinum.json first (see public/data/README.md)
-npm run dev
+npm run dev      # data bundle already present at public/data/renegade-platinum.json
+npm test         # engine parity + save-reader + parser + AI nets
+npm run build    # tsc --noEmit && vite build (DCM_BASE defaults to /mobile-calc/)
 ```
 
 ## Architecture (one screen)

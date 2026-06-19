@@ -21,7 +21,7 @@ jobs:
       - run: npm run build
         env:
           # Must match the Pages subpath, e.g. /<repo>/
-          DCM_BASE: /dynamic-calc-mobile/
+          DCM_BASE: /mobile-calc/
       - uses: actions/upload-pages-artifact@v3
         with: { path: dist }
   deploy:
