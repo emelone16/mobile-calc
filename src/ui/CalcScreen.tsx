@@ -74,7 +74,13 @@ interface MonEditorProps {
 }
 
 function MonEditor({ label, game, value, onChange }: MonEditorProps) {
-  const { selectedMove, selectMove } = useCalcStore()
+  const { direction, selectedMove, selectedEnemyMove, selectMove, selectEnemyMove } = useCalcStore()
+  const isYours = label === 'Yours'
+  // Each card drives its own side of the calc: your moves are the 'offense'
+  // direction, the enemy's moves are 'defense'.
+  const pickMove = isYours ? selectMove : selectEnemyMove
+  const activeMove = isYours ? selectedMove : selectedEnemyMove
+  const isActiveSide = isYours ? direction === 'offense' : direction === 'defense'
   const [showSpeciesPicker, setShowSpeciesPicker] = useState(false)
   const [showNaturePicker, setShowNaturePicker] = useState(false)
   const [showAbilityPicker, setShowAbilityPicker] = useState(false)
@@ -122,7 +128,7 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
       moves = [...value.moves, m]
     }
     onChange({ ...value, moves })
-    if (label === 'Yours' && !has) selectMove(m)
+    if (!has) pickMove(m)
   }
 
   return (
@@ -171,9 +177,9 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
               return (
                 <button
                   key={i}
-                  className={`chip ${!m ? 'chip--empty' : ''} ${label === 'Yours' && m && selectedMove === m ? 'chip--active' : ''}`}
+                  className={`chip ${!m ? 'chip--empty' : ''} ${m && isActiveSide && activeMove === m ? 'chip--active' : ''}`}
                   onClick={() => {
-                    if (m && label === 'Yours') selectMove(m)
+                    if (m) pickMove(m)
                     else setShowMovePicker(true)
                   }}
                 >

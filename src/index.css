@@ -211,6 +211,28 @@ textarea {
   border-style: dashed;
 }
 
+/* segmented control — used for the offense/defense direction toggle */
+.seg {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 0 var(--sp-2);
+  border-radius: calc(var(--r-sm) - 2px);
+  border: none;
+  background: transparent;
+  color: var(--text-dim);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.seg--active {
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
 /* field-style tappable row that opens a picker */
 .field-btn {
   display: flex;
