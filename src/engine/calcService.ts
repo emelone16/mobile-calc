@@ -1,6 +1,6 @@
 // Thin pure wrapper over @smogon/calc. UI never touches engine ctors directly.
 import { calculate, Pokemon, Move, Field } from '@smogon/calc'
-import type { GameData } from '../data/types'
+import type { GameData, StatKey, StatsTable } from '../data/types'
 import { makeAdapterGen } from './generationsAdapter'
 import type { SetState } from '../save/types'
 import type { FieldState } from '../state/calcStore'
@@ -11,6 +11,25 @@ export interface CalcOutcome {
   desc: string
   minPct: number
   maxPct: number
+}
+
+/**
+ * Compute a mon's actual in-game stats at its level (base stats + nature + IVs
+ * + EVs), via the same engine the calc uses. Returns the app's StatKey table.
+ */
+export function computeStats(game: GameData, set: SetState): StatsTable {
+  const gen = makeAdapterGen(game) as any
+  const mon = new Pokemon(gen, set.species, {
+    level: set.level, nature: set.nature, item: set.item, ability: set.ability,
+    ivs: toEngineStats(set.ivs), evs: toEngineStats(set.evs),
+  })
+  const s = mon.rawStats as Record<string, number>
+  const map: Array<[StatKey, string]> = [
+    ['hp', 'hp'], ['at', 'atk'], ['df', 'def'], ['sa', 'spa'], ['sd', 'spd'], ['sp', 'spe'],
+  ]
+  const out = {} as StatsTable
+  for (const [to, from] of map) out[to] = s[from] ?? 0
+  return out
 }
 
 export function runCalc(

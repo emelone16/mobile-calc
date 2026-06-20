@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
 import { predictSwitchIn } from '../engine/aiService'
+import { computeStats } from '../engine/calcService'
 import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
@@ -10,6 +11,20 @@ import type { StatKey, StatsTable } from '../data/types'
 const STAT_KEYS: StatKey[] = ['hp', 'at', 'df', 'sa', 'sd', 'sp']
 const STAT_LABELS: Record<StatKey, string> = { hp: 'HP', at: 'Atk', df: 'Def', sa: 'SpA', sd: 'SpD', sp: 'Spe' }
 const DEFAULT_IVS: StatsTable = { hp: 31, at: 31, df: 31, sa: 31, sd: 31, sp: 31 }
+
+// Which stat each nature raises (+10%) and lowers (-10%); neutral natures absent.
+const NATURE_EFFECTS: Record<string, { plus: StatKey; minus: StatKey }> = {
+  Lonely: { plus: 'at', minus: 'df' }, Brave: { plus: 'at', minus: 'sp' },
+  Adamant: { plus: 'at', minus: 'sa' }, Naughty: { plus: 'at', minus: 'sd' },
+  Bold: { plus: 'df', minus: 'at' }, Relaxed: { plus: 'df', minus: 'sp' },
+  Impish: { plus: 'df', minus: 'sa' }, Lax: { plus: 'df', minus: 'sd' },
+  Timid: { plus: 'sp', minus: 'at' }, Hasty: { plus: 'sp', minus: 'df' },
+  Jolly: { plus: 'sp', minus: 'sa' }, Naive: { plus: 'sp', minus: 'sd' },
+  Modest: { plus: 'sa', minus: 'at' }, Mild: { plus: 'sa', minus: 'df' },
+  Quiet: { plus: 'sa', minus: 'sp' }, Rash: { plus: 'sa', minus: 'sd' },
+  Calm: { plus: 'sd', minus: 'at' }, Gentle: { plus: 'sd', minus: 'df' },
+  Sassy: { plus: 'sd', minus: 'sp' }, Careful: { plus: 'sd', minus: 'sa' },
+}
 const COMMON_ITEMS = [
   'None', 'Leftovers', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Life Orb',
   'Focus Sash', 'Expert Belt', 'Lum Berry', 'Sitrus Berry', 'Black Sludge',
@@ -97,6 +112,13 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
   const moveNames = useMemo(() => Object.keys(game.moves), [game])
   const speciesData = value ? game.species[value.species] : undefined
   const abilityOptions = speciesData ? Object.values(speciesData.abilities) : []
+  // The headline numbers: actual stats at this level/nature/IV/EV spread.
+  const stats = useMemo(() => {
+    if (!value) return null
+    try { return computeStats(game, value) }
+    catch { return null }
+  }, [game, value])
+  const natureEffect = value ? NATURE_EFFECTS[value.nature] : undefined
 
   function pickSpecies(species: string) {
     const data = game.species[species]
@@ -213,6 +235,27 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
               )
             })}
           </div>
+
+          {stats && (
+            <>
+              <div className="label">Stats</div>
+              <div className="stat-row">
+                {STAT_KEYS.map(k => {
+                  const tone =
+                    natureEffect?.plus === k ? 'var(--good)'
+                      : natureEffect?.minus === k ? 'var(--danger)'
+                        : 'var(--text)'
+                  const mark = natureEffect?.plus === k ? '＋' : natureEffect?.minus === k ? '－' : ''
+                  return (
+                    <div className="stat-cell" key={k}>
+                      <span className="muted" style={{ fontSize: 11 }}>{STAT_LABELS[k]}</span>
+                      <span style={{ fontWeight: 700, color: tone }}>{stats[k]}{mark}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
 
           <button className="btn btn--sm" style={{ alignSelf: 'flex-start' }} onClick={() => setExpanded(v => !v)}>
             {expanded ? 'Hide' : 'Show'} IVs / EVs

@@ -404,6 +404,24 @@ textarea {
   text-align: center;
 }
 
+/* computed-stats readout: six compact cells across */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: var(--sp-1);
+}
+
+.stat-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: var(--sp-2) 2px;
+  border-radius: var(--r-sm);
+  background: var(--surface-2);
+  font-size: var(--fs-base);
+}
+
 .badge {
   display: inline-flex;
   align-items: center;
