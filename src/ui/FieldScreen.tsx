@@ -65,16 +65,6 @@ export function FieldScreen() {
           {field.gravity ? 'On' : 'Off'}
         </button>
       </div>
-
-      <div className="card row--between">
-        <div className="label" style={{ margin: 0 }}>Crit</div>
-        <button
-          className={`chip ${field.crit ? 'chip--active' : ''}`}
-          onClick={() => patchField({ crit: !field.crit })}
-        >
-          {field.crit ? 'On' : 'Off'}
-        </button>
-      </div>
     </div>
   )
 }

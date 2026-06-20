@@ -38,6 +38,7 @@ export function runCalc(
   defender: SetState,
   moveName: string,
   field: FieldState,
+  crit: boolean = field.crit,
 ): CalcOutcome {
   const gen = makeAdapterGen(game) as any
 
@@ -51,7 +52,7 @@ export function runCalc(
     ability: defender.ability, ivs: toEngineStats(defender.ivs),
     evs: toEngineStats(defender.evs),
   })
-  const move = new Move(gen, moveName, { isCrit: field.crit })
+  const move = new Move(gen, moveName, { isCrit: crit })
   const f = new Field(toEngineField(field))
 
   const result = calculate(gen, atk, def, move, f)

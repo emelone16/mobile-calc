@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
 import { predictSwitchIn } from '../engine/aiService'
-import { computeStats } from '../engine/calcService'
+import { computeStats, runCalc } from '../engine/calcService'
 import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
@@ -56,12 +56,14 @@ export function CalcScreen() {
         label="Yours"
         game={game}
         value={attacker}
+        opponent={defender}
         onChange={setAttacker}
       />
       <MonEditor
         label="Enemy"
         game={game}
         value={defender}
+        opponent={attacker}
         onChange={setDefender}
       />
       {threats && threats.length > 0 && (
@@ -85,22 +87,20 @@ interface MonEditorProps {
   label: string
   game: NonNullable<ReturnType<typeof useGameStore.getState>['game']>
   value: SetState | null
+  /** The Pokémon on the other side — moves are calc'd against it. */
+  opponent: SetState | null
   onChange(s: SetState): void
 }
 
-function MonEditor({ label, game, value, onChange }: MonEditorProps) {
+function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const {
-    direction, selectedMove, selectedEnemyMove, selectMove, selectEnemyMove,
-    defenderTeam, defenderIndex, trainerName, switchDefender,
+    defenderTeam, defenderIndex, trainerName, switchDefender, field,
   } = useCalcStore()
   const isYours = label === 'Yours'
   // The enemy card shows a party switcher when a whole trainer team is carried.
   const showParty = !isYours && defenderTeam.length > 1
-  // Each card drives its own side of the calc: your moves are the 'offense'
-  // direction, the enemy's moves are 'defense'.
-  const pickMove = isYours ? selectMove : selectEnemyMove
-  const activeMove = isYours ? selectedMove : selectedEnemyMove
-  const isActiveSide = isYours ? direction === 'offense' : direction === 'defense'
+  // Move rows whose damage range is currently showing the critical-hit numbers.
+  const [critRows, setCritRows] = useState<Set<number>>(new Set())
   const [showSpeciesPicker, setShowSpeciesPicker] = useState(false)
   const [showNaturePicker, setShowNaturePicker] = useState(false)
   const [showAbilityPicker, setShowAbilityPicker] = useState(false)
@@ -119,6 +119,31 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
     catch { return null }
   }, [game, value])
   const natureEffect = value ? NATURE_EFFECTS[value.nature] : undefined
+
+  // Damage range for each move slot against the opposing mon, computed both
+  // normal and on a critical hit so a tap can flip between them instantly.
+  const moveOutcomes = useMemo(() => {
+    if (!value || !opponent) return []
+    return value.moves.map(m => {
+      try {
+        return {
+          normal: runCalc(game, value, opponent, m, field, false),
+          crit: runCalc(game, value, opponent, m, field, true),
+        }
+      } catch {
+        return { normal: null, crit: null }
+      }
+    })
+  }, [game, value, opponent, field])
+
+  function toggleCritRow(i: number) {
+    setCritRows(prev => {
+      const next = new Set(prev)
+      if (next.has(i)) next.delete(i)
+      else next.add(i)
+      return next
+    })
+  }
 
   function pickSpecies(species: string) {
     const data = game.species[species]
@@ -155,7 +180,6 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
       moves = [...value.moves, m]
     }
     onChange({ ...value, moves })
-    if (!has) pickMove(m)
   }
 
   return (
@@ -217,20 +241,45 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
             <span className="muted">▾</span>
           </button>
 
-          <div className="label">Moves</div>
-          <div className="row" style={{ flexWrap: 'wrap' }}>
+          <div className="row--between">
+            <div className="label" style={{ margin: 0 }}>Moves</div>
+            <button className="btn btn--sm" onClick={() => setShowMovePicker(true)}>Edit</button>
+          </div>
+          <div className="col" style={{ gap: 6 }}>
             {[0, 1, 2, 3].map(i => {
               const m = value.moves[i]
+              if (!m) {
+                return (
+                  <button
+                    key={i}
+                    className="move-row move-row--empty"
+                    onClick={() => setShowMovePicker(true)}
+                  >
+                    + Add move
+                  </button>
+                )
+              }
+              const showCrit = critRows.has(i)
+              const outcome = moveOutcomes[i]
+              const o = showCrit ? outcome?.crit : outcome?.normal
+              const range = !opponent
+                ? 'No target'
+                : o
+                  ? (o.maxPct > 0 ? `${o.minPct}–${o.maxPct}%` : '—')
+                  : '—'
               return (
                 <button
                   key={i}
-                  className={`chip ${!m ? 'chip--empty' : ''} ${m && isActiveSide && activeMove === m ? 'chip--active' : ''}`}
-                  onClick={() => {
-                    if (m) pickMove(m)
-                    else setShowMovePicker(true)
-                  }}
+                  className="move-row"
+                  onClick={() => toggleCritRow(i)}
                 >
-                  {m ?? '+ Add move'}
+                  <span className="move-row__name">{m}</span>
+                  <span
+                    className="move-row__dmg"
+                    style={showCrit ? { color: 'var(--danger)' } : undefined}
+                  >
+                    {showCrit && opponent ? 'crit ' : ''}{range}
+                  </span>
                 </button>
               )
             })}

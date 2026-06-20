@@ -3,7 +3,6 @@ import { HashRouter, Routes, Route } from 'react-router-dom'
 import { useGameStore } from './state/gameStore'
 import { useBoxStore } from './state/boxStore'
 import { BottomNav } from './ui/BottomNav'
-import { ResultBar } from './ui/ResultBar'
 import { CalcScreen } from './ui/CalcScreen'
 import { TrainersScreen } from './ui/TrainersScreen'
 import { BoxScreen } from './ui/BoxScreen'
@@ -26,7 +25,6 @@ export function App() {
                 <Route path="/field" element={<FieldScreen />} />
               </Routes>}
         </main>
-        <ResultBar />
         <BottomNav />
       </div>
     </HashRouter>

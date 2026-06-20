@@ -255,6 +255,44 @@ textarea {
   font-weight: 400;
 }
 
+/* one move per row, showing its damage range against the opposing mon */
+.move-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  width: 100%;
+  min-height: var(--control-h);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: var(--fs-base);
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+.move-row__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.move-row__dmg {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-dim);
+}
+
+.move-row--empty {
+  justify-content: center;
+  color: var(--muted);
+  border-style: dashed;
+  font-weight: 600;
+}
+
 /* ---------------------------------------------------------------------------
  * Bottom sheet
  * ------------------------------------------------------------------------- */
