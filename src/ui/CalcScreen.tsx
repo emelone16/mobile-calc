@@ -74,8 +74,13 @@ interface MonEditorProps {
 }
 
 function MonEditor({ label, game, value, onChange }: MonEditorProps) {
-  const { direction, selectedMove, selectedEnemyMove, selectMove, selectEnemyMove } = useCalcStore()
+  const {
+    direction, selectedMove, selectedEnemyMove, selectMove, selectEnemyMove,
+    defenderTeam, defenderIndex, trainerName, switchDefender,
+  } = useCalcStore()
   const isYours = label === 'Yours'
+  // The enemy card shows a party switcher when a whole trainer team is carried.
+  const showParty = !isYours && defenderTeam.length > 1
   // Each card drives its own side of the calc: your moves are the 'offense'
   // direction, the enemy's moves are 'defense'.
   const pickMove = isYours ? selectMove : selectEnemyMove
@@ -136,6 +141,26 @@ function MonEditor({ label, game, value, onChange }: MonEditorProps) {
       <div className="row--between">
         <div className="label" style={{ margin: 0 }}>{label}</div>
       </div>
+
+      {showParty && (
+        <div className="col" style={{ gap: 4 }}>
+          <div className="label" style={{ margin: 0 }}>
+            {trainerName ? `${trainerName}'s party` : 'Party'}
+          </div>
+          <div className="scroll-x" style={{ paddingBottom: 4 }}>
+            {defenderTeam.map((mon, i) => (
+              <button
+                key={`${mon.species}-${i}`}
+                className={`chip ${i === defenderIndex ? 'chip--active' : ''}`}
+                style={{ flexShrink: 0 }}
+                onClick={() => switchDefender(i)}
+              >
+                {mon.species} <span className="muted" style={{ marginLeft: 4 }}>Lv{mon.level}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <button className="field-btn" onClick={() => setShowSpeciesPicker(true)}>
         <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>

@@ -36,10 +36,9 @@ export function TrainersScreen() {
     })
   }, [q, locations, game, trainersById])
 
-  function pickMon(trainer: Trainer, set: TrainerSet) {
+  function pickMon(trainer: Trainer, index: number) {
     const team = trainer.team.map(trainerSetToSetState)
-    const active = trainerSetToSetState(set)
-    setDefenderTeam(active, team)
+    setDefenderTeam(team, index, trainer.name)
     setActiveTrainer(null)
     navigate('/')
   }
@@ -77,7 +76,7 @@ export function TrainersScreen() {
                 key={`${set.species}-${i}`}
                 className="card col"
                 style={{ minWidth: 160, flexShrink: 0, textAlign: 'left', cursor: 'pointer' }}
-                onClick={() => pickMon(activeTrainer, set)}
+                onClick={() => pickMon(activeTrainer, i)}
               >
                 <div style={{ fontWeight: 700 }}>{set.species}</div>
                 <div className="muted" style={{ fontSize: 12 }}>Lv {set.level}</div>
