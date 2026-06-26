@@ -318,19 +318,12 @@ textarea {
 
 .sheet {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 1001;
-  max-height: 85vh;
   display: flex;
   flex-direction: column;
   background: var(--surface);
-  border-top-left-radius: var(--r-md);
-  border-top-right-radius: var(--r-md);
-  border: 1px solid var(--border);
-  border-bottom: none;
-  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.4);
+  border: none;
   animation: sheet-slide-up 0.18s ease-out;
 }
 
@@ -340,15 +333,15 @@ textarea {
 }
 
 @keyframes sheet-slide-up {
-  from { transform: translateY(100%); }
-  to { transform: translateY(0); }
+  from { transform: translateY(24px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
 }
 
 .sheet-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: var(--sp-4);
+  padding: calc(var(--sp-4) + env(safe-area-inset-top)) var(--sp-4) var(--sp-4);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
 }
