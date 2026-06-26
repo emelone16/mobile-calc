@@ -4,6 +4,7 @@ import { useCalcStore } from '../state/calcStore'
 import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
 import { computeStats, runCalc } from '../engine/calcService'
+import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker, BottomSheet } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
@@ -39,11 +40,6 @@ const TYPE_COLORS: Record<string, string> = {
   Rock: '#B8A038', Ghost: '#705898', Dragon: '#7038F8', Dark: '#705848',
   Steel: '#B8B8D0', Fairy: '#EE99AC',
 }
-const COMMON_ITEMS = [
-  'None', 'Leftovers', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Life Orb',
-  'Focus Sash', 'Expert Belt', 'Lum Berry', 'Sitrus Berry', 'Black Sludge',
-  'Wide Lens', 'Scope Lens', 'Quick Claw', 'Shell Bell', 'King\'s Rock',
-]
 
 export function CalcScreen() {
   const game = useGameStore(s => s.game)
@@ -123,6 +119,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     [game, isYours],
   )
   const moveNames = useMemo(() => Object.keys(game.moves), [game])
+  const itemNames = useMemo(() => ['None', ...getAllItemNames(game)], [game])
   const speciesData = value ? game.species[value.species] : undefined
   const abilityOptions = speciesData ? Object.values(speciesData.abilities) : []
   // The headline numbers: actual stats at this level/nature/IV/EV spread.
@@ -442,7 +439,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
       />
       <SearchablePicker
         open={showItemPicker}
-        items={COMMON_ITEMS}
+        items={itemNames}
         getLabel={i => i}
         onPick={i => patch({ item: i === 'None' ? '' : i })}
         onClose={() => setShowItemPicker(false)}

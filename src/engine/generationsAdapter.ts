@@ -112,6 +112,14 @@ export function makeAdapterGen(game: GameData): AnyGen {
   return proxy
 }
 
+/** All item names the engine knows about for this game's species gen, sorted. */
+export function getAllItemNames(game: GameData): string[] {
+  const gen = makeAdapterGen(game)
+  const names: string[] = []
+  for (const item of gen.items as unknown as Iterable<{ name: string }>) names.push(item.name)
+  return names.sort((a, b) => a.localeCompare(b))
+}
+
 /** Per-GameData memo of id->display-name maps, so lookups don't rescan keys. */
 const nameMapCache = new WeakMap<GameData, { species: Map<string, string>; moves: Map<string, string> }>()
 
