@@ -5,7 +5,7 @@ import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
 import { computeStats, runCalc } from '../engine/calcService'
 import { getAllItemNames } from '../engine/generationsAdapter'
-import { SearchablePicker, BottomSheet } from './components/BottomSheet'
+import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
@@ -111,7 +111,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [showItemPicker, setShowItemPicker] = useState(false)
   const [showMovePicker, setShowMovePicker] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
-  const [activeTrainerParty, setActiveTrainerParty] = useState<Trainer | null>(null)
   const [expanded, setExpanded] = useState(false)
 
   const allTrainers = useMemo(
@@ -159,10 +158,9 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     onChange({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } })
   }
 
-  function pickTrainerMon(trainer: Trainer, index: number) {
+  function pickTrainer(trainer: Trainer) {
     const team = trainer.team.map(trainerSetToSetState)
-    setDefenderTeam(team, index, trainer.name)
-    setActiveTrainerParty(null)
+    setDefenderTeam(team, 0, trainer.name)
     setShowTrainerPicker(false)
   }
 
@@ -391,36 +389,10 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         open={showTrainerPicker}
         items={allTrainers}
         getLabel={t => `${t.name} — ${t.location}`}
-        onPick={t => { setShowTrainerPicker(false); setActiveTrainerParty(t) }}
+        onPick={pickTrainer}
         onClose={() => setShowTrainerPicker(false)}
         title="Search trainer"
       />
-      <BottomSheet
-        open={!!activeTrainerParty}
-        title={activeTrainerParty ? `${activeTrainerParty.name}'s party` : undefined}
-        onClose={() => setActiveTrainerParty(null)}
-      >
-        {activeTrainerParty && (
-          <div className="scroll-x">
-            {activeTrainerParty.team.map((set, i) => (
-              <button
-                key={`${set.species}-${i}`}
-                className="card col"
-                style={{ minWidth: 160, flexShrink: 0, textAlign: 'left', cursor: 'pointer' }}
-                onClick={() => pickTrainerMon(activeTrainerParty, i)}
-              >
-                <div style={{ fontWeight: 700 }}>{set.species}</div>
-                <div className="muted" style={{ fontSize: 12 }}>Lv {set.level}</div>
-                <div className="col" style={{ gap: 2, marginTop: 4 }}>
-                  {set.moves.map((m, mi) => (
-                    <div key={mi} className="muted" style={{ fontSize: 12 }}>{m}</div>
-                  ))}
-                </div>
-              </button>
-            ))}
-          </div>
-        )}
-      </BottomSheet>
       <SearchablePicker
         open={showNaturePicker}
         items={[...NATURES]}
