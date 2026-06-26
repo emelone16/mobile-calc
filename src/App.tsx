@@ -4,7 +4,6 @@ import { useGameStore } from './state/gameStore'
 import { useBoxStore } from './state/boxStore'
 import { BottomNav } from './ui/BottomNav'
 import { CalcScreen } from './ui/CalcScreen'
-import { TrainersScreen } from './ui/TrainersScreen'
 import { BoxScreen } from './ui/BoxScreen'
 import { FieldScreen } from './ui/FieldScreen'
 
@@ -20,7 +19,6 @@ export function App() {
             ? <div style={{ padding: 16, color: '#888' }}>Loading {status}…</div>
             : <Routes>
                 <Route path="/" element={<CalcScreen />} />
-                <Route path="/trainers" element={<TrainersScreen />} />
                 <Route path="/box" element={<BoxScreen />} />
                 <Route path="/field" element={<FieldScreen />} />
               </Routes>}
