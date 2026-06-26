@@ -7,10 +7,12 @@ export interface BottomSheetProps {
   open: boolean
   title?: string
   onClose(): void
+  /** Rendered below the header, above the scrollable body. Stays fixed in place (e.g. a search input). */
+  pinned?: ReactNode
   children: ReactNode
 }
 
-export function BottomSheet({ open, title, onClose, children }: BottomSheetProps) {
+export function BottomSheet({ open, title, onClose, pinned, children }: BottomSheetProps) {
   if (!open) return null
 
   return createPortal(
@@ -23,6 +25,7 @@ export function BottomSheet({ open, title, onClose, children }: BottomSheetProps
             ✕
           </button>
         </div>
+        {pinned && <div className="sheet-pinned">{pinned}</div>}
         <div className="sheet-body">{children}</div>
       </div>
     </>,
@@ -53,15 +56,20 @@ export function SearchablePicker<T>({ open, items, getLabel, onPick, onClose, ti
   }
 
   return (
-    <BottomSheet open={open} title={title} onClose={handleClose}>
-      <input
-        className="sheet-search"
-        type="text"
-        placeholder="Search…"
-        value={query}
-        onChange={e => setQuery(e.target.value)}
-        autoFocus
-      />
+    <BottomSheet
+      open={open}
+      title={title}
+      onClose={handleClose}
+      pinned={
+        <input
+          className="sheet-search"
+          type="text"
+          placeholder="Search…"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      }
+    >
       <div>
         {filtered.length === 0 && <div className="muted" style={{ padding: 12 }}>No matches</div>}
         {filtered.map((item, i) => {
