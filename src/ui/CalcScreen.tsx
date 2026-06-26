@@ -1,12 +1,20 @@
 import { useMemo, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
+import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
 import { computeStats, runCalc } from '../engine/calcService'
-import { SearchablePicker } from './components/BottomSheet'
+import { SearchablePicker, BottomSheet } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
-import type { StatKey, StatsTable } from '../data/types'
+import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
+
+function trainerSetToSetState(t: TrainerSet): SetState {
+  return {
+    species: t.species, level: t.level, nature: t.nature, ability: t.ability,
+    item: t.item, moves: t.moves, ivs: t.ivs, evs: t.evs ?? {},
+  }
+}
 
 const STAT_KEYS: StatKey[] = ['hp', 'at', 'df', 'sa', 'sd', 'sp']
 const STAT_LABELS: Record<StatKey, string> = { hp: 'HP', at: 'Atk', df: 'Def', sa: 'SpA', sd: 'SpD', sp: 'Spe' }
@@ -94,8 +102,9 @@ interface MonEditorProps {
 
 function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const {
-    defenderTeam, defenderIndex, trainerName, switchDefender, field,
+    defenderTeam, defenderIndex, trainerName, switchDefender, setDefenderTeam, field,
   } = useCalcStore()
+  const boxSets = useBoxStore(s => s.sets)
   const isYours = label === 'Yours'
   // The enemy card shows a party switcher when a whole trainer team is carried.
   const showParty = !isYours && defenderTeam.length > 1
@@ -106,9 +115,15 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [showAbilityPicker, setShowAbilityPicker] = useState(false)
   const [showItemPicker, setShowItemPicker] = useState(false)
   const [showMovePicker, setShowMovePicker] = useState(false)
+  const [showTrainerPicker, setShowTrainerPicker] = useState(false)
+  const [activeTrainerParty, setActiveTrainerParty] = useState<Trainer | null>(null)
   const [expanded, setExpanded] = useState(false)
 
   const speciesNames = useMemo(() => Object.keys(game.species), [game])
+  const allTrainers = useMemo(
+    () => (isYours ? [] : Object.values(game.trainers.byId)),
+    [game, isYours],
+  )
   const moveNames = useMemo(() => Object.keys(game.moves), [game])
   const speciesData = value ? game.species[value.species] : undefined
   const abilityOptions = speciesData ? Object.values(speciesData.abilities) : []
@@ -152,6 +167,17 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
       ? [...data.learnset].reverse().slice(0, 4).map(([, m]) => m)
       : []
     onChange({ ...blankSet(species), ability: firstAbility, moves: learnsetMoves })
+  }
+
+  function pickFromBox(s: SetState) {
+    onChange({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } })
+  }
+
+  function pickTrainerMon(trainer: Trainer, index: number) {
+    const team = trainer.team.map(trainerSetToSetState)
+    setDefenderTeam(team, index, trainer.name)
+    setActiveTrainerParty(null)
+    setShowTrainerPicker(false)
   }
 
   function patch(p: Partial<SetState>) {
@@ -208,12 +234,26 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         </div>
       )}
 
+      {!isYours && (
+        <button className="field-btn" onClick={() => setShowTrainerPicker(true)}>
+          <span>
+            {trainerName ? `Trainer: ${trainerName}` : <span className="muted">Search trainer…</span>}
+          </span>
+          <span className="muted">▾</span>
+        </button>
+      )}
+
       <button className="field-btn" onClick={() => setShowSpeciesPicker(true)}>
         <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>
           {value?.species ?? <span className="muted">Tap to choose</span>}
         </span>
         <span className="muted">▾</span>
       </button>
+      {isYours && boxSets.length === 0 && (
+        <span className="muted" style={{ fontSize: 12 }}>
+          Your box is empty — add Pokémon from the Box tab.
+        </span>
+      )}
 
       {value && (
         <>
@@ -343,14 +383,59 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         </>
       )}
 
+      {isYours ? (
+        <SearchablePicker
+          open={showSpeciesPicker}
+          items={boxSets}
+          getLabel={s => `${s.species} (Lv ${s.level})`}
+          onPick={pickFromBox}
+          onClose={() => setShowSpeciesPicker(false)}
+          title="Choose from your box"
+        />
+      ) : (
+        <SearchablePicker
+          open={showSpeciesPicker}
+          items={speciesNames}
+          getLabel={s => s}
+          onPick={pickSpecies}
+          onClose={() => setShowSpeciesPicker(false)}
+          title="Choose species"
+        />
+      )}
       <SearchablePicker
-        open={showSpeciesPicker}
-        items={speciesNames}
-        getLabel={s => s}
-        onPick={pickSpecies}
-        onClose={() => setShowSpeciesPicker(false)}
-        title="Choose species"
+        open={showTrainerPicker}
+        items={allTrainers}
+        getLabel={t => `${t.name} — ${t.location}`}
+        onPick={t => { setShowTrainerPicker(false); setActiveTrainerParty(t) }}
+        onClose={() => setShowTrainerPicker(false)}
+        title="Search trainer"
       />
+      <BottomSheet
+        open={!!activeTrainerParty}
+        title={activeTrainerParty ? `${activeTrainerParty.name}'s party` : undefined}
+        onClose={() => setActiveTrainerParty(null)}
+      >
+        {activeTrainerParty && (
+          <div className="scroll-x">
+            {activeTrainerParty.team.map((set, i) => (
+              <button
+                key={`${set.species}-${i}`}
+                className="card col"
+                style={{ minWidth: 160, flexShrink: 0, textAlign: 'left', cursor: 'pointer' }}
+                onClick={() => pickTrainerMon(activeTrainerParty, i)}
+              >
+                <div style={{ fontWeight: 700 }}>{set.species}</div>
+                <div className="muted" style={{ fontSize: 12 }}>Lv {set.level}</div>
+                <div className="col" style={{ gap: 2, marginTop: 4 }}>
+                  {set.moves.map((m, mi) => (
+                    <div key={mi} className="muted" style={{ fontSize: 12 }}>{m}</div>
+                  ))}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </BottomSheet>
       <SearchablePicker
         open={showNaturePicker}
         items={[...NATURES]}
