@@ -313,6 +313,7 @@ textarea {
   background: rgba(0, 0, 0, 0.55);
   z-index: 1000;
   animation: sheet-fade-in 0.15s ease-out;
+  touch-action: none;
 }
 
 .sheet {
@@ -372,17 +373,26 @@ textarea {
   cursor: pointer;
 }
 
+.sheet-pinned {
+  flex-shrink: 0;
+  padding: var(--sp-4) var(--sp-4) 0;
+}
+
 .sheet-body {
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding: var(--sp-4);
   padding-bottom: calc(var(--sp-4) + env(safe-area-inset-bottom));
   flex: 1;
 }
 
+.sheet-pinned + .sheet-body {
+  padding-top: var(--sp-3);
+}
+
 .sheet-search {
   width: 100%;
-  margin-bottom: var(--sp-3);
 }
 
 .picker-row {
