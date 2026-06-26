@@ -18,7 +18,6 @@ function trainerSetToSetState(t: TrainerSet): SetState {
 
 const STAT_KEYS: StatKey[] = ['hp', 'at', 'df', 'sa', 'sd', 'sp']
 const STAT_LABELS: Record<StatKey, string> = { hp: 'HP', at: 'Atk', df: 'Def', sa: 'SpA', sd: 'SpD', sp: 'Spe' }
-const DEFAULT_IVS: StatsTable = { hp: 31, at: 31, df: 31, sa: 31, sd: 31, sp: 31 }
 
 // Which stat each nature raises (+10%) and lowers (-10%); neutral natures absent.
 const NATURE_EFFECTS: Record<string, { plus: StatKey; minus: StatKey }> = {
@@ -38,13 +37,6 @@ const COMMON_ITEMS = [
   'Focus Sash', 'Expert Belt', 'Lum Berry', 'Sitrus Berry', 'Black Sludge',
   'Wide Lens', 'Scope Lens', 'Quick Claw', 'Shell Bell', 'King\'s Rock',
 ]
-
-function blankSet(species: string): SetState {
-  return {
-    species, level: 100, nature: 'Hardy', ability: '', item: '',
-    moves: [], ivs: { ...DEFAULT_IVS }, evs: {},
-  }
-}
 
 export function CalcScreen() {
   const game = useGameStore(s => s.game)
@@ -119,7 +111,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [activeTrainerParty, setActiveTrainerParty] = useState<Trainer | null>(null)
   const [expanded, setExpanded] = useState(false)
 
-  const speciesNames = useMemo(() => Object.keys(game.species), [game])
   const allTrainers = useMemo(
     () => (isYours ? [] : Object.values(game.trainers.byId)),
     [game, isYours],
@@ -158,15 +149,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
       else next.add(i)
       return next
     })
-  }
-
-  function pickSpecies(species: string) {
-    const data = game.species[species]
-    const firstAbility = data ? Object.values(data.abilities)[0] ?? '' : ''
-    const learnsetMoves = data
-      ? [...data.learnset].reverse().slice(0, 4).map(([, m]) => m)
-      : []
-    onChange({ ...blankSet(species), ability: firstAbility, moves: learnsetMoves })
   }
 
   function pickFromBox(s: SetState) {
@@ -234,21 +216,20 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         </div>
       )}
 
-      {!isYours && (
-        <button className="field-btn" onClick={() => setShowTrainerPicker(true)}>
-          <span>
-            {trainerName ? `Trainer: ${trainerName}` : <span className="muted">Search trainer…</span>}
-          </span>
-          <span className="muted">▾</span>
-        </button>
-      )}
-
-      <button className="field-btn" onClick={() => setShowSpeciesPicker(true)}>
+      <button
+        className="field-btn"
+        onClick={() => (isYours ? setShowSpeciesPicker(true) : setShowTrainerPicker(true))}
+      >
         <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>
-          {value?.species ?? <span className="muted">Tap to choose</span>}
+          {value?.species ?? (
+            <span className="muted">{isYours ? 'Tap to choose' : 'Search trainer…'}</span>
+          )}
         </span>
         <span className="muted">▾</span>
       </button>
+      {!isYours && trainerName && (
+        <span className="muted" style={{ fontSize: 12 }}>Trainer: {trainerName}</span>
+      )}
       {isYours && boxSets.length === 0 && (
         <span className="muted" style={{ fontSize: 12 }}>
           Your box is empty — add Pokémon from the Box tab.
@@ -383,7 +364,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         </>
       )}
 
-      {isYours ? (
+      {isYours && (
         <SearchablePicker
           open={showSpeciesPicker}
           items={boxSets}
@@ -391,15 +372,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
           onPick={pickFromBox}
           onClose={() => setShowSpeciesPicker(false)}
           title="Choose from your box"
-        />
-      ) : (
-        <SearchablePicker
-          open={showSpeciesPicker}
-          items={speciesNames}
-          getLabel={s => s}
-          onPick={pickSpecies}
-          onClose={() => setShowSpeciesPicker(false)}
-          title="Choose species"
         />
       )}
       <SearchablePicker
