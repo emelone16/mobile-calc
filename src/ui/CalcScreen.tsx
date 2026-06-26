@@ -25,6 +25,13 @@ const NATURE_EFFECTS: Record<string, { plus: StatKey; minus: StatKey }> = {
   Calm: { plus: 'sd', minus: 'at' }, Gentle: { plus: 'sd', minus: 'df' },
   Sassy: { plus: 'sd', minus: 'sp' }, Careful: { plus: 'sd', minus: 'sa' },
 }
+const TYPE_COLORS: Record<string, string> = {
+  Normal: '#A8A878', Fire: '#F08030', Water: '#6890F0', Electric: '#F8D030',
+  Grass: '#78C850', Ice: '#98D8D8', Fighting: '#C03028', Poison: '#A040A0',
+  Ground: '#E0C068', Flying: '#A890F0', Psychic: '#F85888', Bug: '#A8B820',
+  Rock: '#B8A038', Ghost: '#705898', Dragon: '#7038F8', Dark: '#705848',
+  Steel: '#B8B8D0', Fairy: '#EE99AC',
+}
 const COMMON_ITEMS = [
   'None', 'Leftovers', 'Choice Band', 'Choice Specs', 'Choice Scarf', 'Life Orb',
   'Focus Sash', 'Expert Belt', 'Lum Berry', 'Sitrus Berry', 'Black Sludge',
@@ -267,6 +274,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                 : o
                   ? (o.maxPct > 0 ? `${o.minPct}–${o.maxPct}%` : '—')
                   : '—'
+              const moveType = game.moves[m]?.type
               return (
                 <button
                   key={i}
@@ -274,6 +282,14 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   onClick={() => toggleCritRow(i)}
                 >
                   <span className="move-row__name">{m}</span>
+                  {moveType && (
+                    <span
+                      className="type-badge"
+                      style={{ background: TYPE_COLORS[moveType] ?? 'var(--surface-3)' }}
+                    >
+                      {moveType}
+                    </span>
+                  )}
                   <span
                     className="move-row__dmg"
                     style={showCrit ? { color: 'var(--danger)' } : undefined}
