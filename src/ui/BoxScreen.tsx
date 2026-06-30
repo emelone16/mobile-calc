@@ -8,6 +8,13 @@ import { parseSets } from '../import/moveReplacements'
 import { importSave } from '../save/saveService'
 import type { SetState } from '../save/types'
 
+function toSpriteName(species: string): string {
+  return species.toLowerCase().replace(/[.''']/g, '').replace(/\s+/g, '-')
+}
+function iconUrl(species: string) {
+  return `https://img.pokemondb.net/sprites/gen4-dp/icon/${toSpriteName(species)}.png`
+}
+
 export function BoxScreen() {
   const navigate = useNavigate()
   const game = useGameStore(s => s.game)
@@ -119,9 +126,17 @@ export function BoxScreen() {
             style={{ cursor: 'pointer', textAlign: 'left' }}
             onClick={() => { setAttacker(s); navigate('/') }}
           >
-            <div>
-              <div style={{ fontWeight: 700 }}>{s.species}</div>
-              <div className="muted" style={{ fontSize: 12 }}>Lv {s.level} · {s.nature}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <img
+                src={iconUrl(s.species)}
+                alt=""
+                style={{ width: 40, height: 40, imageRendering: 'pixelated', flexShrink: 0 }}
+                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+              />
+              <div>
+                <div style={{ fontWeight: 700 }}>{s.species}</div>
+                <div className="muted" style={{ fontSize: 12 }}>Lv {s.level} · {s.nature}</div>
+              </div>
             </div>
             {s.source && (
               <span className={`badge badge--${s.source}`}>{s.source}</span>
@@ -147,9 +162,17 @@ export function BoxScreen() {
           <div className="muted">{reviewSets?.length ?? 0} Pokémon found</div>
           <div className="col">
             {reviewSets?.map((s, i) => (
-              <div key={i} className="card">
-                <div style={{ fontWeight: 700 }}>{s.species}</div>
-                <div className="muted" style={{ fontSize: 12 }}>Lv {s.level} · {s.nature}</div>
+              <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <img
+                  src={iconUrl(s.species)}
+                  alt=""
+                  style={{ width: 40, height: 40, imageRendering: 'pixelated', flexShrink: 0 }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                <div>
+                  <div style={{ fontWeight: 700 }}>{s.species}</div>
+                  <div className="muted" style={{ fontSize: 12 }}>Lv {s.level} · {s.nature}</div>
+                </div>
               </div>
             ))}
           </div>
