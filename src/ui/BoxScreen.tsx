@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useGameStore } from '../state/gameStore'
 import { useBoxStore } from '../state/boxStore'
 import { useCalcStore } from '../state/calcStore'
@@ -8,6 +9,7 @@ import { importSave } from '../save/saveService'
 import type { SetState } from '../save/types'
 
 export function BoxScreen() {
+  const navigate = useNavigate()
   const game = useGameStore(s => s.game)
   const { sets, addMany, clear } = useBoxStore()
   const { setAttacker } = useCalcStore()
@@ -115,7 +117,7 @@ export function BoxScreen() {
             key={i}
             className="card row--between"
             style={{ cursor: 'pointer', textAlign: 'left' }}
-            onClick={() => setAttacker(s)}
+            onClick={() => { setAttacker(s); navigate('/') }}
           >
             <div>
               <div style={{ fontWeight: 700 }}>{s.species}</div>
