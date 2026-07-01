@@ -69,12 +69,16 @@ export interface TrainerSet {
   ivs: StatsTable
   evs?: Partial<StatsTable>
   location: string
+  /** Which nuzlocke split this specific battle belongs to, when known directly (not inferred from location). */
+  split?: string
 }
 
 export interface Trainer {
   trId: number
   name: string
   location: string
+  /** Which nuzlocke split this specific trainer belongs to, when known directly (not inferred from location). */
+  split?: string
   battleType: 'Singles' | 'Doubles'
   team: TrainerSet[]   // ordered by subIndex
 }
@@ -122,7 +126,7 @@ export interface RawSet {
   reward_item?: string; form?: string; item: string
   ivs: StatsTable; nature: string; moves: string[]
   sub_index: number; ability: string; gender?: string
-  location: string; spriteId?: number | null; orientation?: number | null
+  location: string; split?: string; spriteId?: number | null; orientation?: number | null
 }
 export interface RawPok {
   bs: StatsTable; types: string[]; abilities: Record<string, string>

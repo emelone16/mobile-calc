@@ -69,12 +69,13 @@ function buildTrainerIndex(
         setName, species, level: s.level, trId: s.tr_id, subIndex: s.sub_index,
         ai: s.ai, battleType: s.battle_type === 'Doubles' ? 'Doubles' : 'Singles',
         nature: s.nature, ability: s.ability, item: s.item, moves: s.moves,
-        ivs: s.ivs, location,
+        ivs: s.ivs, location, split: s.split,
       }
       const t = (byId[s.tr_id] ??= {
         trId: s.tr_id,
         name,
         location,
+        split: s.split,
         battleType: set.battleType,
         team: [],
       })
