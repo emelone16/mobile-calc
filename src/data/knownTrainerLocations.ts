@@ -1,14 +1,16 @@
-// A handful of trainers are unique, one-of-a-kind NPCs whose location is
-// fixed, common Pokémon-Platinum knowledge — even though the source bundle
-// never recorded a `location` for them (their set name carries no route
-// token, e.g. "Lvl 51 Leader Roark2 " has no "|...|" segment). Recovering
-// these is safe because each one only ever battles in a single building.
+// Most of the "unknown_location" gap was fixed directly in
+// renegade-platinum.json by matching trainer teams (species/level/moveset)
+// against a community-authored nuzlocke split guide. A handful of unique
+// story NPCs didn't have a matching team recorded in that guide, but their
+// location is fixed, common Pokémon-Platinum knowledge regardless (each one
+// only ever battles in a single building), so they're backfilled here as a
+// fallback instead of being left unknown.
 //
-// Generic trainer classes (Youngster, Lass, Cowgirl, ...) that are missing
-// location are NOT handled here: the same class name is reused at dozens of
-// different routes, so there's no way to recover which specific one a given
-// entry is without the original (inaccessible) source data — guessing would
-// just replace one wrong answer with another.
+// Generic trainer classes (Youngster, Lass, Cowgirl, ...) that are still
+// missing location are NOT handled here: the same class name is reused at
+// dozens of different routes, so there's no way to recover which specific
+// one a given remaining entry is — guessing would just replace one wrong
+// answer with another.
 const KNOWN_BASE_LOCATIONS: Record<string, string> = {
   'Leader Roark': 'Oreburgh City',
   'Leader Gardenia': 'Eterna City',
