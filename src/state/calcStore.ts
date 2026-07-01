@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
 import type { SetState } from '../save/types'
 
 export interface FieldState {
@@ -53,7 +54,7 @@ interface CalcStore {
   patchField(p: Partial<FieldState>): void
 }
 
-export const useCalcStore = create<CalcStore>((set) => ({
+export const useCalcStore = create<CalcStore>()(persist((set) => ({
   attacker: null,
   attackerTeam: [],
   attackerIndex: -1,
@@ -131,4 +132,17 @@ export const useCalcStore = create<CalcStore>((set) => ({
   selectEnemyMove: (m) => set({ selectedEnemyMove: m, direction: 'defense' }),
   setDirection: (d) => set({ direction: d }),
   patchField: (p) => set((st) => ({ field: { ...st.field, ...p } })),
+}), {
+  name: 'dcm-calc',
+  // Cache the last trainer (enemy team) and last Pokémon party across sessions;
+  // leave transient UI state (field conditions, selected move highlight) out.
+  partialize: (st) => ({
+    attacker: st.attacker,
+    attackerTeam: st.attackerTeam,
+    attackerIndex: st.attackerIndex,
+    defender: st.defender,
+    defenderTeam: st.defenderTeam,
+    defenderIndex: st.defenderIndex,
+    trainerName: st.trainerName,
+  }),
 }))
