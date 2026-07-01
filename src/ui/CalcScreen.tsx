@@ -9,6 +9,7 @@ import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
+import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 
 function trainerSetToSetState(t: TrainerSet): SetState {
   return {
@@ -125,10 +126,23 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
 
-  const allTrainers = useMemo(
-    () => (isYours ? [] : Object.values(game.trainers.byId)),
+  // Grouped by (split, location) in story order, so the trainer picker reads
+  // top-to-bottom the way the game is actually played instead of by trId.
+  const trainerGroups = useMemo(
+    () => (isYours ? [] : groupTrainersByLocation(Object.values(game.trainers.byId))),
     [game, isYours],
   )
+  const allTrainers = useMemo(
+    () => trainerGroups.flatMap(g => g.trainers),
+    [trainerGroups],
+  )
+  const trainerGroupLabel = useMemo(() => {
+    const labels = new Map<number, string>()
+    for (const g of trainerGroups) {
+      for (const t of g.trainers) labels.set(t.trId, `${g.split} — ${displayLocation(g.location)}`)
+    }
+    return labels
+  }, [trainerGroups])
   const moveNames = useMemo(() => Object.keys(game.moves), [game])
   const itemNames = useMemo(() => ['None', ...getAllItemNames(game)], [game])
   const speciesData = value ? game.species[value.species] : undefined
@@ -480,7 +494,8 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
       <SearchablePicker
         open={showTrainerPicker}
         items={allTrainers}
-        getLabel={t => `${t.name} — ${t.location}`}
+        getLabel={t => `${t.name} (${displayLocation(t.location)})`}
+        getGroup={t => trainerGroupLabel.get(t.trId) ?? displayLocation(t.location)}
         onPick={pickTrainer}
         onClose={() => setShowTrainerPicker(false)}
         title="Search trainer"

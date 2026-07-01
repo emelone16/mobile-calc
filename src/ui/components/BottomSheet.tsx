@@ -1,6 +1,6 @@
 // Primary mobile picker primitive. Replaces every <select>/dropdown:
 // full-width, searchable, large touch targets.
-import { useState, type ReactNode } from 'react'
+import { Fragment, useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 
 export interface BottomSheetProps {
@@ -40,10 +40,12 @@ export interface PickerProps<T> {
   onPick(item: T): void
   onClose(): void
   title?: string
+  /** When provided, items are expected to already be pre-sorted into groups; a header renders before each new group. */
+  getGroup?(item: T): string
 }
 
 /** Generic searchable picker built on BottomSheet: species/move/item/etc. */
-export function SearchablePicker<T>({ open, items, getLabel, onPick, onClose, title }: PickerProps<T>) {
+export function SearchablePicker<T>({ open, items, getLabel, onPick, onClose, title, getGroup }: PickerProps<T>) {
   const [query, setQuery] = useState('')
 
   const filtered = query.trim()
@@ -74,17 +76,24 @@ export function SearchablePicker<T>({ open, items, getLabel, onPick, onClose, ti
         {filtered.length === 0 && <div className="muted" style={{ padding: 12 }}>No matches</div>}
         {filtered.map((item, i) => {
           const label = getLabel(item)
+          const group = getGroup?.(item)
+          const prevItem = filtered[i - 1]
+          const prevGroup = prevItem !== undefined ? getGroup?.(prevItem) : undefined
           return (
-            <button
-              key={`${label}-${i}`}
-              className="picker-row"
-              onClick={() => {
-                onPick(item)
-                handleClose()
-              }}
-            >
-              {label}
-            </button>
+            <Fragment key={`${label}-${i}`}>
+              {group !== undefined && group !== prevGroup && (
+                <div className="picker-group-header">{group}</div>
+              )}
+              <button
+                className="picker-row"
+                onClick={() => {
+                  onPick(item)
+                  handleClose()
+                }}
+              >
+                {label}
+              </button>
+            </Fragment>
           )
         })}
       </div>
