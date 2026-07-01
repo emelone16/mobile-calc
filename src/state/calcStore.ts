@@ -17,6 +17,10 @@ export type CalcDirection = 'offense' | 'defense'
 
 interface CalcStore {
   attacker: SetState | null
+  /** Your party — up to 6 Pokémon you're carrying into battle. */
+  attackerTeam: SetState[]
+  /** Index of the active attacker within `attackerTeam` (-1 if empty). */
+  attackerIndex: number
   defender: SetState | null
   /** Whole enemy team carried from a trainer, for the AI switch-in preview. */
   defenderTeam: SetState[]
@@ -32,6 +36,12 @@ interface CalcStore {
   selectedEnemyMove: string | null
   field: FieldState
   setAttacker(s: SetState): void
+  /** Swap the active attacker to another member of your party. */
+  switchAttacker(index: number): void
+  /** Add a Pokémon to your party (max 6). */
+  addToAttackerParty(s: SetState): void
+  /** Remove a party member by index; switches active member if needed. */
+  removeFromAttackerParty(index: number): void
   setDefender(s: SetState): void
   /** Load an enemy team (e.g. from a trainer detail view) and make member `index` active. */
   setDefenderTeam(team: SetState[], index: number, trainerName?: string): void
@@ -45,6 +55,8 @@ interface CalcStore {
 
 export const useCalcStore = create<CalcStore>((set) => ({
   attacker: null,
+  attackerTeam: [],
+  attackerIndex: -1,
   defender: null,
   defenderTeam: [],
   defenderIndex: -1,
@@ -53,7 +65,39 @@ export const useCalcStore = create<CalcStore>((set) => ({
   selectedMove: null,
   selectedEnemyMove: null,
   field: { gravity: false, crit: false },
-  setAttacker: (s) => set({ attacker: s, selectedMove: s.moves[0] ?? null }),
+  // Editing your active Pokémon keeps the party in sync: if it belongs to a
+  // party, update it in place so the rest of the team survives the edit.
+  setAttacker: (s) => set((st) => {
+    const keepMove = st.selectedMove && s.moves.includes(st.selectedMove)
+      ? st.selectedMove
+      : s.moves[0] ?? null
+    if (st.attackerIndex >= 0 && st.attackerTeam.length > 0) {
+      const team = st.attackerTeam.slice()
+      team[st.attackerIndex] = s
+      return { attacker: s, attackerTeam: team, selectedMove: keepMove }
+    }
+    return { attacker: s, attackerTeam: [s], attackerIndex: 0, selectedMove: keepMove }
+  }),
+  switchAttacker: (index) => set((st) => {
+    const member = st.attackerTeam[index]
+    if (!member) return {}
+    return { attacker: member, attackerIndex: index, selectedMove: member.moves[0] ?? null }
+  }),
+  addToAttackerParty: (s) => set((st) => {
+    if (st.attackerTeam.length >= 6) return {}
+    return { attackerTeam: [...st.attackerTeam, s] }
+  }),
+  removeFromAttackerParty: (index) => set((st) => {
+    const team = st.attackerTeam.filter((_, i) => i !== index)
+    if (team.length === 0) {
+      return { attackerTeam: [], attackerIndex: -1, attacker: null, selectedMove: null }
+    }
+    const newIndex = index < st.attackerIndex
+      ? st.attackerIndex - 1
+      : Math.min(st.attackerIndex, team.length - 1)
+    const member = team[newIndex]
+    return { attackerTeam: team, attackerIndex: newIndex, attacker: member, selectedMove: member.moves[0] ?? null }
+  }),
   // Editing the enemy keeps the carried trainer team in sync: if the active mon
   // belongs to a team, update it in place so the rest of the party survives the
   // edit; otherwise treat it as a standalone one-mon defender.

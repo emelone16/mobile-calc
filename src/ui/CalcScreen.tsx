@@ -41,6 +41,16 @@ const TYPE_COLORS: Record<string, string> = {
   Steel: '#B8B8D0', Fairy: '#EE99AC',
 }
 
+function toSpriteName(species: string): string {
+  return species.toLowerCase().replace(/[.''']/g, '').replace(/\s+/g, '-')
+}
+function spriteUrl(species: string) {
+  return `https://img.pokemondb.net/sprites/diamond-pearl/normal/${toSpriteName(species)}.png`
+}
+function iconUrl(species: string) {
+  return `https://img.pokemondb.net/sprites/gen4-dp/icon/${toSpriteName(species)}.png`
+}
+
 export function CalcScreen() {
   const game = useGameStore(s => s.game)
   const { attacker, defender, defenderTeam, field, setAttacker, setDefender } = useCalcStore()
@@ -98,6 +108,7 @@ interface MonEditorProps {
 function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const {
     defenderTeam, defenderIndex, trainerName, switchDefender, setDefenderTeam, field,
+    attackerTeam, attackerIndex, switchAttacker, addToAttackerParty, removeFromAttackerParty,
   } = useCalcStore()
   const boxSets = useBoxStore(s => s.sets)
   const isYours = label === 'Yours'
@@ -105,6 +116,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const showParty = !isYours && defenderTeam.length > 1
   // Move rows whose damage range is currently showing the critical-hit numbers.
   const [critRows, setCritRows] = useState<Set<number>>(new Set())
+  const [showPartyAddPicker, setShowPartyAddPicker] = useState(false)
   const [showSpeciesPicker, setShowSpeciesPicker] = useState(false)
   const [showNaturePicker, setShowNaturePicker] = useState(false)
   const [showAbilityPicker, setShowAbilityPicker] = useState(false)
@@ -211,6 +223,12 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                 style={{ flexShrink: 0 }}
                 onClick={() => switchDefender(i)}
               >
+                <img
+                  src={iconUrl(mon.species)}
+                  alt=""
+                  style={{ width: 32, height: 32, imageRendering: 'pixelated' }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
                 {mon.species} <span className="muted" style={{ marginLeft: 4 }}>Lv{mon.level}</span>
               </button>
             ))}
@@ -218,25 +236,86 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         </div>
       )}
 
-      <button
-        className="field-btn"
-        onClick={() => (isYours ? setShowSpeciesPicker(true) : setShowTrainerPicker(true))}
-      >
-        <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>
-          {value?.species ?? (
-            <span className="muted">{isYours ? 'Tap to choose' : 'Search trainer…'}</span>
+      {isYours && attackerTeam.length >= 1 && (
+        <div className="col" style={{ gap: 4 }}>
+          <div className="label" style={{ margin: 0 }}>My Party</div>
+          <div className="scroll-x" style={{ paddingBottom: 4 }}>
+            {attackerTeam.map((mon, i) => (
+              <div key={`${mon.species}-${i}`} style={{ display: 'flex', flexShrink: 0, alignItems: 'center', gap: 2 }}>
+                <button
+                  className={`chip ${i === attackerIndex ? 'chip--active' : ''}`}
+                  onClick={() => switchAttacker(i)}
+                >
+                  <img
+                    src={iconUrl(mon.species)}
+                    alt=""
+                    style={{ width: 32, height: 32, imageRendering: 'pixelated' }}
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                  />
+                  {mon.species} <span className="muted" style={{ marginLeft: 4 }}>Lv{mon.level}</span>
+                </button>
+                <button
+                  className="chip"
+                  style={{ padding: '0 8px', opacity: 0.6 }}
+                  onClick={() => removeFromAttackerParty(i)}
+                  aria-label={`Remove ${mon.species} from party`}
+                >
+                  ×
+                </button>
+              </div>
+            ))}
+            {attackerTeam.length < 6 && (
+              <button
+                className="chip"
+                style={{ flexShrink: 0 }}
+                onClick={() => setShowPartyAddPicker(true)}
+                aria-label="Add Pokémon to party"
+              >
+                + Add
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+        {value && (
+          <img
+            src={spriteUrl(value.species)}
+            alt={value.species}
+            style={{ width: 80, height: 80, imageRendering: 'pixelated', flexShrink: 0 }}
+            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+          />
+        )}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <button
+            className="field-btn"
+            onClick={() => (isYours ? setShowSpeciesPicker(true) : setShowTrainerPicker(true))}
+          >
+            <span style={{ fontWeight: 700, fontSize: 'var(--fs-lg)' }}>
+              {value?.species ?? (
+                <span className="muted">{isYours ? 'Tap to choose' : 'Search trainer…'}</span>
+              )}
+            </span>
+            <span className="muted">▾</span>
+          </button>
+          {speciesData && speciesData.types.length > 0 && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {speciesData.types.map(type => (
+                <span key={type} className={`type-chip type-${type.toLowerCase()}`}>{type}</span>
+              ))}
+            </div>
           )}
-        </span>
-        <span className="muted">▾</span>
-      </button>
-      {!isYours && trainerName && (
-        <span className="muted" style={{ fontSize: 12 }}>Trainer: {trainerName}</span>
-      )}
-      {isYours && boxSets.length === 0 && (
-        <span className="muted" style={{ fontSize: 12 }}>
-          Your box is empty — add Pokémon from the Box tab.
-        </span>
-      )}
+          {!isYours && trainerName && (
+            <span className="muted" style={{ fontSize: 12 }}>Trainer: {trainerName}</span>
+          )}
+          {isYours && boxSets.length === 0 && (
+            <span className="muted" style={{ fontSize: 12 }}>
+              Your box is empty — add Pokémon from the Box tab.
+            </span>
+          )}
+        </div>
+      </div>
 
       {value && (
         <>
@@ -383,6 +462,19 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
           onPick={pickFromBox}
           onClose={() => setShowSpeciesPicker(false)}
           title="Choose from your box"
+        />
+      )}
+      {isYours && (
+        <SearchablePicker
+          open={showPartyAddPicker}
+          items={boxSets}
+          getLabel={s => `${s.species} (Lv ${s.level})`}
+          onPick={(s) => {
+            addToAttackerParty({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } })
+            setShowPartyAddPicker(false)
+          }}
+          onClose={() => setShowPartyAddPicker(false)}
+          title="Add to party"
         />
       )}
       <SearchablePicker
