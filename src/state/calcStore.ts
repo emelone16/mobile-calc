@@ -96,6 +96,7 @@ export const useCalcStore = create<CalcStore>((set) => ({
       ? st.attackerIndex - 1
       : Math.min(st.attackerIndex, team.length - 1)
     const member = team[newIndex]
+    if (!member) return { attackerTeam: team, attackerIndex: -1, attacker: null, selectedMove: null }
     return { attackerTeam: team, attackerIndex: newIndex, attacker: member, selectedMove: member.moves[0] ?? null }
   }),
   // Editing the enemy keeps the carried trainer team in sync: if the active mon
