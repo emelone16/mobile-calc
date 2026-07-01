@@ -3,6 +3,7 @@ import type {
   TrainerIndex, Trainer, TrainerSet, RawSet,
 } from './types'
 import { mergePlatinumFormes } from './platinumFormes'
+import { knownLocationFor } from './knownTrainerLocations'
 
 // Move base-power special cases preserved from the original engine loader.
 const MOVE_BP_OVERRIDES: Record<string, number> = { Return: 102, Magnitude: 70 }
@@ -60,16 +61,20 @@ function buildTrainerIndex(
 
   for (const [species, sets] of Object.entries(formatted)) {
     for (const [setName, s] of Object.entries(sets)) {
+      const name = parseTrainerName(setName)
+      const location = s.location === 'unknown_location'
+        ? (knownLocationFor(name) ?? s.location)
+        : s.location
       const set: TrainerSet = {
         setName, species, level: s.level, trId: s.tr_id, subIndex: s.sub_index,
         ai: s.ai, battleType: s.battle_type === 'Doubles' ? 'Doubles' : 'Singles',
         nature: s.nature, ability: s.ability, item: s.item, moves: s.moves,
-        ivs: s.ivs, location: s.location,
+        ivs: s.ivs, location,
       }
       const t = (byId[s.tr_id] ??= {
         trId: s.tr_id,
-        name: parseTrainerName(setName),
-        location: s.location,
+        name,
+        location,
         battleType: set.battleType,
         team: [],
       })

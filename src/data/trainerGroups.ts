@@ -18,7 +18,7 @@ const SPLIT_TABLE: Array<{ split: string; locations: string[] }> = [
   { split: 'Byron', locations: ['Route 211', 'Route 218', 'Iron Island', 'Canalave City', 'Mt. Coronet'] },
   { split: 'Candice', locations: ['Route 216', 'Route 217', 'Snowpoint City'] },
   { split: 'Volkner', locations: ['Route 222', 'Sunyshore City'] },
-  { split: 'Elite Four', locations: ['Route 219', 'Route 220', 'Route 221', 'Route 223', 'Route 224', 'Route 225', 'Route 226', 'Route 227', 'Route 228', 'Route 229', 'Route 230', 'Stark Mountain', 'Victory Road'] },
+  { split: 'Elite Four', locations: ['Route 219', 'Route 220', 'Route 221', 'Route 223', 'Route 224', 'Route 225', 'Route 226', 'Route 227', 'Route 228', 'Route 229', 'Route 230', 'Stark Mountain', 'Victory Road', 'Pokémon League'] },
 ]
 
 const locationToSplit = new Map<string, string>()
