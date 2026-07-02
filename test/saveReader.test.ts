@@ -174,6 +174,33 @@ describe('gen4 save reader', () => {
     expect(sets.length).toBe(1) // only Garchomp survives
   })
 
+  it('excludes boxes 17 and 18 from import', () => {
+    const buf = new ArrayBuffer(0x80000)
+    const view = new DataView(buf)
+    const u8 = new Uint8Array(buf)
+    view.setUint8(PT.partyCountOffset, 1)
+    u8.set(encodeMon(garchomp, 236), PT.partyCountOffset + 4)
+
+    // box 16 (last included box, 0-indexed 15) gets a mon in its first slot;
+    // box 17 (0-indexed 16, first excluded box) gets a mon in its first slot.
+    const box16Slot0 = PT.boxDataOffset + 15 * 30 * 136
+    const box17Slot0 = PT.boxDataOffset + 16 * 30 * 136
+    u8.set(encodeMon(blissey, 136), box16Slot0)
+    u8.set(encodeMon({ ...blissey, species: 'Togepi' }, 136), box17Slot0)
+
+    const writeU32 = (off: number, v: number) => view.setUint32(off, v >>> 0, true)
+    writeU32(PT.smallBlockSize - 16, 200)
+    writeU32(PT.smallBlockSize + BLOCK2 - 16, 0)
+    const bigStart = PT.boxDataOffset - 4
+    writeU32(bigStart + PT.bigBlockSize - 16, 200)
+    writeU32(bigStart + BLOCK2 + PT.bigBlockSize - 16, 0)
+
+    const mons = gen4Reader.read(buf)
+    const names = mons.map(m => GEN4_ENUMS.species[m.speciesId])
+    expect(names).toContain('Blissey') // box 16 mon is imported
+    expect(names).not.toContain('Togepi') // box 17 mon is excluded
+  })
+
   it('selects the newer save block (block 2) by counter', () => {
     const buf = buildSave({ party: [garchomp], box: [blissey], block2: true })
     const mons = gen4Reader.read(buf)

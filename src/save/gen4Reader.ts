@@ -26,12 +26,15 @@ interface GameOffsets {
   bigBlockSize: number
   boxSlotCount: number
 }
+const BOX_SLOTS_PER_BOX = 30
+const TOTAL_BOX_COUNT = 18
 const DPPT_OFFSETS: GameOffsets = {
   partyCountOffset: 0x9c,
   smallBlockSize: 0xcf2c,
   boxDataOffset: 0xcf30,
   bigBlockSize: 0x121e4,
-  boxSlotCount: 540, // 18 boxes * 30 slots
+  // Boxes 17-18 are excluded from import, so only read boxes 1-16.
+  boxSlotCount: (TOTAL_BOX_COUNT - 2) * BOX_SLOTS_PER_BOX,
 }
 
 const MASK32 = 0xffffffff
