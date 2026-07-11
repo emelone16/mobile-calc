@@ -7,9 +7,9 @@ import { computeStats, applyBoost, runCalc, effectiveSpeed, speedWeatherMultipli
 import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import {
-  MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet,
+  MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet, ReplaceSlotSheet,
 } from './components/MoveSheets'
-import { NATURES } from '../save/types'
+import { NATURES, withDefaultMoves } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet, GameData } from '../data/types'
 import type { FieldState } from '../state/calcStore'
@@ -18,7 +18,7 @@ import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 function trainerSetToSetState(t: TrainerSet): SetState {
   return {
     species: t.species, level: t.level, nature: t.nature, ability: t.ability,
-    item: t.item, moves: t.moves, ivs: t.ivs, evs: t.evs ?? {},
+    item: t.item, moves: t.moves, defaultMoves: [...t.moves], ivs: t.ivs, evs: t.evs ?? {},
   }
 }
 
@@ -162,6 +162,8 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [detailIndex, setDetailIndex] = useState<number | null>(null)
   // Open move chooser: {mode:'add'} appends, {mode:'replace',index} swaps a slot.
   const [chooser, setChooser] = useState<{ mode: 'add' } | { mode: 'replace'; index: number } | null>(null)
+  // A move waiting for the user to choose which full-set slot it replaces.
+  const [pendingReplace, setPendingReplace] = useState<string | null>(null)
   const [showLearnset, setShowLearnset] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
@@ -221,7 +223,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   }
 
   function pickFromBox(s: SetState) {
-    onChange({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } })
+    onChange(withDefaultMoves({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
   }
 
   function pickTrainer(trainer: Trainer) {
@@ -273,11 +275,15 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     writeBoosts(next)
   }
 
-  // Append a move; a duplicate is ignored, and a full set drops its oldest slot.
-  function addMove(m: string) {
+  // Add a move to a free slot; if the set is already full, let the user pick
+  // which move it replaces (rather than silently dropping one).
+  function handleAdd(m: string) {
     if (!value || value.moves.includes(m)) return
-    const moves = value.moves.length >= 4 ? [...value.moves.slice(1), m] : [...value.moves, m]
-    onChange({ ...value, moves })
+    if (value.moves.length >= 4) {
+      setPendingReplace(m)
+      return
+    }
+    onChange({ ...value, moves: [...value.moves, m] })
   }
   // Swap the move in slot `i`. If the incoming move already sits in another
   // slot, the two trade places so the set never holds a duplicate.
@@ -294,6 +300,19 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     if (!value) return
     onChange({ ...value, moves: value.moves.filter((_, idx) => idx !== i) })
   }
+  // Restore the moveset captured when this Pokémon was loaded.
+  function resetMoves() {
+    if (!value?.defaultMoves) return
+    onChange({ ...value, moves: [...value.defaultMoves] })
+  }
+
+  const defaultMoves = value?.defaultMoves
+  const movesOverridden =
+    !!defaultMoves &&
+    (value!.moves.length !== defaultMoves.length ||
+      value!.moves.some((m, i) => m !== defaultMoves[i]))
+  // A slot holds an override when its move wasn't in the original moveset.
+  const isDefaultMove = (m: string) => !defaultMoves || defaultMoves.includes(m)
 
   return (
     <div className="card col">
@@ -436,13 +455,20 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
 
           <div className="row--between">
             <div className="label" style={{ margin: 0 }}>Moves</div>
-            <button
-              className="btn btn--sm"
-              disabled={!speciesData}
-              onClick={() => setShowLearnset(true)}
-            >
-              Learnset
-            </button>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {movesOverridden && (
+                <button className="btn btn--sm" onClick={resetMoves} title="Restore the moves from import">
+                  Reset
+                </button>
+              )}
+              <button
+                className="btn btn--sm"
+                disabled={!speciesData}
+                onClick={() => setShowLearnset(true)}
+              >
+                Learnset
+              </button>
+            </div>
           </div>
           <div className="col" style={{ gap: 6 }}>
             {[0, 1, 2, 3].map(i => {
@@ -467,6 +493,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   ? (o.maxPct > 0 ? `${o.minPct}–${o.maxPct}%` : '—')
                   : '—'
               const moveType = game.moves[m]?.type
+              const overridden = !isDefaultMove(m)
               return (
                 <div key={i} className="move-row">
                   <button
@@ -476,6 +503,9 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   >
                     <span className="move-row__name">{m}</span>
                     <MoveTypeBadge type={moveType} />
+                    {overridden && (
+                      <span className="move-override-dot" title="Overridden — not the imported move" />
+                    )}
                   </button>
                   <button
                     className="move-row__dmg-btn"
@@ -661,7 +691,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
           items={boxSets}
           getLabel={s => `${s.species} (Lv ${s.level})`}
           onPick={(s) => {
-            addToAttackerParty({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } })
+            addToAttackerParty(withDefaultMoves({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
             setShowPartyAddPicker(false)
           }}
           onClose={() => setShowPartyAddPicker(false)}
@@ -721,7 +751,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         title={chooser?.mode === 'replace' ? 'Swap move' : 'Add move'}
         onPick={m => {
           if (!chooser) return
-          if (chooser.mode === 'add') addMove(m)
+          if (chooser.mode === 'add') handleAdd(m)
           else replaceMoveAt(chooser.index, m)
         }}
       />
@@ -733,7 +763,19 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         currentMoves={value?.moves ?? []}
         monLevel={value?.level}
         ownedTmMoves={ownedTmMoves}
-        onAdd={addMove}
+        onAdd={handleAdd}
+      />
+      <ReplaceSlotSheet
+        open={pendingReplace !== null}
+        onClose={() => setPendingReplace(null)}
+        game={game}
+        incoming={pendingReplace}
+        currentMoves={value?.moves ?? []}
+        defaultMoves={value?.defaultMoves}
+        onPick={i => {
+          if (pendingReplace) replaceMoveAt(i, pendingReplace)
+          setPendingReplace(null)
+        }}
       />
     </div>
   )
