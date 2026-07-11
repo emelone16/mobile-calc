@@ -16,6 +16,12 @@ export interface SetState {
    * is omitted. Absent means no boosts (all stages 0).
    */
   boosts?: Partial<BoostsTable>
+  /**
+   * Paralysis flag. Paralysis cuts Speed (¼ in gens ≤6, ½ from gen 7) and is the
+   * only major status that changes a stat, so it is tracked here to fold into the
+   * displayed Speed and the damage engine. Absent/false means healthy.
+   */
+  paralyzed?: boolean
   source?: 'clipboard' | 'save'
 }
 

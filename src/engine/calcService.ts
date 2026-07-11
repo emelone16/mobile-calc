@@ -45,6 +45,62 @@ export function applyBoost(stat: number, stage: number): number {
   return Math.floor((stat * num) / den)
 }
 
+/**
+ * Weather-triggered Speed abilities double the holder's Speed while the matching
+ * weather is up (e.g. Swift Swim in Rain). `computeStats`/`applyBoost` return the
+ * unmodified stat, so callers fold this in to show the true in-battle Speed — the
+ * same multiplier the damage engine already applies internally when it sees the
+ * ability + weather. Returns 1 when nothing applies.
+ *
+ * Sand Rush (gen 5+) and Slush Rush (gen 7+) are gated on the game's damage gen
+ * so they never fire on a hack that predates them.
+ */
+export function speedWeatherMultiplier(game: GameData, set: SetState, field: FieldState): number {
+  const ability = set.ability?.trim()
+  if (!ability || !field.weather) return 1
+  const gen = game.mechanics.damageGen
+  const pairs: Array<[string, string, number]> = [
+    ['Swift Swim', 'Rain', 3],
+    ['Chlorophyll', 'Sun', 3],
+    ['Sand Rush', 'Sand', 5],
+    ['Slush Rush', 'Hail', 7],
+  ]
+  for (const [ab, weather, minGen] of pairs) {
+    if (ability === ab && field.weather === weather && gen >= minGen) return 2
+  }
+  return 1
+}
+
+/**
+ * Speed multiplier from a held item (the gen-4 movers): Choice Scarf ×1.5,
+ * Quick Powder ×2 for an untransformed Ditto, and the Speed-sapping items
+ * (Iron Ball, Macho Brace, and the six Power items) ×0.5. Returns 1 otherwise.
+ */
+export function speedItemMultiplier(item: string | undefined, species: string): number {
+  const it = item?.trim()
+  if (!it || it === 'None') return 1
+  if (it === 'Choice Scarf') return 1.5
+  if (it === 'Quick Powder') return species === 'Ditto' ? 2 : 1
+  if (it === 'Iron Ball' || it === 'Macho Brace') return 0.5
+  if (/^Power (Weight|Bracer|Belt|Lens|Band|Anklet)$/.test(it)) return 0.5
+  return 1
+}
+
+/**
+ * The mon's effective Speed as it would act in battle, given its raw (nature/IV/
+ * EV) Speed: apply the stat stage, then the weather-ability and held-item
+ * multipliers, then the paralysis cut — flooring after each step to match the
+ * order the gen-4 games use. Mirrors what the damage engine already does
+ * internally for speed-based moves so the headline number agrees with it.
+ */
+export function effectiveSpeed(game: GameData, set: SetState, field: FieldState, rawSpeed: number): number {
+  let sp = applyBoost(rawSpeed, set.boosts?.sp ?? 0)
+  sp = Math.floor(sp * speedWeatherMultiplier(game, set, field))
+  sp = Math.floor(sp * speedItemMultiplier(set.item, set.species))
+  if (set.paralyzed) sp = Math.floor(sp / (game.mechanics.damageGen >= 7 ? 2 : 4))
+  return sp
+}
+
 export function runCalc(
   game: GameData,
   attacker: SetState,
@@ -60,12 +116,14 @@ export function runCalc(
     ability: attacker.ability, ivs: toEngineStats(attacker.ivs),
     evs: toEngineStats(attacker.evs), moves: attacker.moves,
     boosts: toEngineBoosts(attacker.boosts),
+    status: attacker.paralyzed ? 'par' : '',
   })
   const def = new Pokemon(gen, defender.species, {
     level: defender.level, nature: defender.nature, item: defender.item,
     ability: defender.ability, ivs: toEngineStats(defender.ivs),
     evs: toEngineStats(defender.evs),
     boosts: toEngineBoosts(defender.boosts),
+    status: defender.paralyzed ? 'par' : '',
   })
   const move = new Move(gen, moveName, { isCrit: crit })
   const f = new Field(toEngineField(field))

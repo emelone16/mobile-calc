@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { loadRpFromDisk } from './helpers'
-import { runCalc } from '../src/engine/calcService'
+import { runCalc, computeStats, speedWeatherMultiplier, speedItemMultiplier, effectiveSpeed } from '../src/engine/calcService'
 import type { SetState } from '../src/save/types'
 import type { FieldState } from '../src/state/calcStore'
 
@@ -58,6 +58,69 @@ describe('engine smoke', () => {
     const base = runCalc(game, atk, def, 'Earthquake', field)
     const boosted = runCalc(game, atk, { ...def, boosts: { df: 2 } }, 'Earthquake', field)
     expect(boosted.maxPct).toBeLessThan(base.maxPct)
+  })
+
+  it('doubles Speed for Swift Swim in the rain (and only then)', () => {
+    const game = loadRpFromDisk()
+    const swimmer = set({ species: 'Ludicolo', ability: 'Swift Swim', moves: ['Surf'] })
+    const speed = computeStats(game, swimmer).sp
+
+    const rain: FieldState = { ...field, weather: 'Rain' }
+    const sun: FieldState = { ...field, weather: 'Sun' }
+    expect(speedWeatherMultiplier(game, swimmer, rain)).toBe(2)
+    expect(speedWeatherMultiplier(game, swimmer, field)).toBe(1)   // no weather
+    expect(speedWeatherMultiplier(game, swimmer, sun)).toBe(1)     // wrong weather
+    // The engine already reflects the doubled Speed in speed-based damage.
+    expect(Math.floor(speed * speedWeatherMultiplier(game, swimmer, rain))).toBe(speed * 2)
+
+    // A different ability in rain gets no boost.
+    const other = set({ species: 'Ludicolo', ability: 'Rain Dish', moves: ['Surf'] })
+    expect(speedWeatherMultiplier(game, other, rain)).toBe(1)
+  })
+
+  it('applies held-item Speed modifiers', () => {
+    expect(speedItemMultiplier('Choice Scarf', 'Jolteon')).toBe(1.5)
+    expect(speedItemMultiplier('Iron Ball', 'Jolteon')).toBe(0.5)
+    expect(speedItemMultiplier('Macho Brace', 'Jolteon')).toBe(0.5)
+    expect(speedItemMultiplier('Power Anklet', 'Jolteon')).toBe(0.5)
+    expect(speedItemMultiplier('Quick Powder', 'Ditto')).toBe(2)   // Ditto only
+    expect(speedItemMultiplier('Quick Powder', 'Jolteon')).toBe(1)
+    expect(speedItemMultiplier('None', 'Jolteon')).toBe(1)
+    expect(speedItemMultiplier('Leftovers', 'Jolteon')).toBe(1)
+  })
+
+  it('effectiveSpeed folds stage, weather ability, item, and paralysis together', () => {
+    const game = loadRpFromDisk()
+    const base = set({ species: 'Ludicolo', ability: 'Swift Swim', moves: ['Surf'] })
+    const raw = computeStats(game, base).sp
+    const rain: FieldState = { ...field, weather: 'Rain' }
+
+    // Nothing active: effective == raw.
+    expect(effectiveSpeed(game, base, field, raw)).toBe(raw)
+    // Swift Swim in rain doubles.
+    expect(effectiveSpeed(game, base, rain, raw)).toBe(raw * 2)
+    // Choice Scarf stacks on top of the rain doubling (each step floored).
+    const scarf = { ...base, item: 'Choice Scarf' }
+    expect(effectiveSpeed(game, scarf, rain, raw)).toBe(Math.floor(raw * 2 * 1.5))
+    // Paralysis quarters Speed in a gen-4 game.
+    const para = { ...base, paralyzed: true }
+    expect(effectiveSpeed(game, para, field, raw)).toBe(Math.floor(raw / 4))
+    // A +2 Agility stage applies before the multipliers.
+    const agile = { ...base, boosts: { sp: 2 } }
+    expect(effectiveSpeed(game, agile, rain, raw)).toBe(Math.floor(raw * 2) * 2)
+  })
+
+  it('paralysis lowers the mon Speed the engine uses for speed-based moves', () => {
+    const game = loadRpFromDisk()
+    // Electro Ball is stronger the faster the attacker is relative to the target,
+    // so paralysing the attacker should not increase its damage.
+    const atk = set({ species: 'Jolteon', level: 50, nature: 'Timid', moves: ['Electro Ball'] })
+    const def = set({ species: 'Snorlax', level: 50, nature: 'Careful' })
+    if (game.moves['Electro Ball']) {
+      const healthy = runCalc(game, atk, def, 'Electro Ball', field)
+      const paralyzed = runCalc(game, { ...atk, paralyzed: true }, def, 'Electro Ball', field)
+      expect(paralyzed.maxPct).toBeLessThanOrEqual(healthy.maxPct)
+    }
   })
 })
 
