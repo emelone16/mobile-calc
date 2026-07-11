@@ -3,12 +3,13 @@ import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
 import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
-import { computeStats, applyBoost, runCalc, speedWeatherMultiplier } from '../engine/calcService'
+import { computeStats, applyBoost, runCalc, effectiveSpeed, speedWeatherMultiplier, speedItemMultiplier } from '../engine/calcService'
 import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
-import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
+import type { StatKey, StatsTable, Trainer, TrainerSet, GameData } from '../data/types'
+import type { FieldState } from '../state/calcStore'
 import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 
 function trainerSetToSetState(t: TrainerSet): SetState {
@@ -16,6 +17,22 @@ function trainerSetToSetState(t: TrainerSet): SetState {
     species: t.species, level: t.level, nature: t.nature, ability: t.ability,
     item: t.item, moves: t.moves, ivs: t.ivs, evs: t.evs ?? {},
   }
+}
+
+// Short labels for the Speed modifiers folded into the displayed stat, so the
+// tinted number says *why* it changed (weather ability, item, or paralysis).
+const SPEED_ITEM_LABELS: Record<string, string> = {
+  'Choice Scarf': 'Scarf', 'Quick Powder': '×2',
+  'Iron Ball': 'Iron Ball', 'Macho Brace': 'Brace',
+}
+function speedModLabels(game: GameData, set: SetState, field: FieldState): string[] {
+  const out: string[] = []
+  // Weather Speed abilities are labelled with the weather that triggers them.
+  if (field.weather && speedWeatherMultiplier(game, set, field) > 1) out.push(field.weather)
+  const im = speedItemMultiplier(set.item, set.species)
+  if (im !== 1) out.push(SPEED_ITEM_LABELS[set.item.trim()] ?? (im < 1 ? 'Power' : 'item'))
+  if (set.paralyzed) out.push('PAR')
+  return out
 }
 
 const STAT_KEYS: StatKey[] = ['hp', 'at', 'df', 'sa', 'sd', 'sp']
@@ -238,6 +255,10 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
       if (typeof s === 'number' && s !== 0) clean[k] = Math.max(-6, Math.min(6, s))
     }
     onChange({ ...value, boosts: Object.keys(clean).length ? clean : undefined })
+  }
+  function toggleParalyzed() {
+    if (!value) return
+    onChange({ ...value, paralyzed: !value.paralyzed || undefined })
   }
   function setBoost(key: BoostKey, stage: number) {
     if (!value) return
@@ -466,13 +487,16 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                 {STAT_KEYS.map(k => {
                   const stage = k === 'hp' ? 0 : (value.boosts?.[k as BoostKey] ?? 0)
                   const boosted = stage !== 0 ? applyBoost(stats[k], stage) : stats[k]
-                  // Fold in weather Speed abilities (Swift Swim in rain, etc.) so
-                  // the headline Speed matches the value the damage engine uses.
-                  const speedMult = k === 'sp' ? speedWeatherMultiplier(game, value, field) : 1
-                  const shown = speedMult !== 1 ? Math.floor(boosted * speedMult) : boosted
+                  // Speed folds in the modifiers the game applies after the stat
+                  // stage (weather abilities, held items, paralysis) so the
+                  // headline number matches what the damage engine uses.
+                  const shown = k === 'sp' ? effectiveSpeed(game, value, field, stats.sp) : boosted
+                  const speedMods = k === 'sp' ? speedModLabels(game, value, field) : []
+                  const spUp = k === 'sp' && shown > boosted
+                  const spDown = k === 'sp' && shown < boosted
                   const tone =
-                    stage > 0 || speedMult > 1 ? 'var(--good)'
-                      : stage < 0 ? 'var(--danger)'
+                    stage > 0 || spUp ? 'var(--good)'
+                      : stage < 0 || spDown ? 'var(--danger)'
                         : natureEffect?.plus === k ? 'var(--good)'
                           : natureEffect?.minus === k ? 'var(--danger)'
                             : 'var(--text)'
@@ -486,8 +510,8 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                       {stage !== 0 && (
                         <span style={{ fontSize: 10, color: tone }}>{fmtStage(stage)}</span>
                       )}
-                      {speedMult > 1 && stage === 0 && (
-                        <span style={{ fontSize: 10, color: tone }}>×{speedMult}</span>
+                      {speedMods.length > 0 && (
+                        <span style={{ fontSize: 10, color: tone }}>{speedMods.join(' ')}</span>
                       )}
                     </div>
                   )
@@ -512,6 +536,16 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                 {value.boosts && (
                   <button className="btn btn--sm" onClick={() => writeBoosts({})}>Reset</button>
                 )}
+              </div>
+              <div className="row--between">
+                <span style={{ fontWeight: 600 }}>Paralyzed</span>
+                <button
+                  className={`chip ${value.paralyzed ? 'chip--active' : ''}`}
+                  onClick={toggleParalyzed}
+                  title="Quarters Speed (halves from gen 7)"
+                >
+                  {value.paralyzed ? 'On' : 'Off'}
+                </button>
               </div>
               <div className="scroll-x" style={{ paddingBottom: 4 }}>
                 {BOOST_MOVES.map(mv => (
