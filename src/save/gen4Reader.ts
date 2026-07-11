@@ -13,6 +13,7 @@
 import type { RawMon, SaveReader } from './types'
 import type { StatsTable } from '../data/types'
 import { GEN4_ENUMS, EXP_TABLES, BLOCK_ORDERS } from './gen4Enums'
+import { TM_HM_ITEM_ID_MIN, TM_HM_ITEM_ID_MAX } from './renegadePlatinumTms'
 
 const PARTY_MON_SIZE = 236
 const BOX_MON_SIZE = 136
@@ -53,18 +54,13 @@ export const gen4Reader: SaveReader = {
     const out: RawMon[] = []
 
     // --- choose active blocks (small block holds party, big block holds boxes) ---
-    let partyBase = 0
+    const partyBase = selectGeneralBase(view, paired)
     let boxBase = off.boxDataOffset
     if (paired) {
       const bigBlockStart = off.boxDataOffset - 4
       const small1 = readU32(view, off.smallBlockSize - 16)
       const small2 = readU32(view, off.smallBlockSize + BLOCK2 - 16)
-      let smallStart = 0
-      if (isInvalidCounter(small1) || (!isInvalidCounter(small2) && small2 > small1)) {
-        smallStart = BLOCK2
-      }
-      partyBase = smallStart
-      const selectedSmall = smallStart === BLOCK2 ? small2 : small1
+      const selectedSmall = partyBase === BLOCK2 ? small2 : small1
 
       const big1 = readU32(view, bigBlockStart + off.bigBlockSize - 16)
       const big2 = readU32(view, bigBlockStart + BLOCK2 + off.bigBlockSize - 16)
@@ -90,6 +86,43 @@ export const gen4Reader: SaveReader = {
 
     return out
   },
+
+  // The TM Case pocket lives in the general (small) block. It is a fixed-size
+  // array of {u16 itemId, u16 count} slots, front-compacted (a zero id ends the
+  // list). Gen-4 TM/HM item ids are 328..427. Offset & capacity were confirmed
+  // against a real Renegade Platinum save.
+  readBag(buf) {
+    const view = new DataView(buf)
+    const paired = buf.byteLength >= 0x80000
+    const base = selectGeneralBase(view, paired) + TM_POCKET_OFFSET
+    const owned: number[] = []
+    for (let i = 0; i < TM_POCKET_CAPACITY; i++) {
+      const o = base + i * 4
+      if (o + 4 > view.byteLength) break
+      const id = view.getUint16(o, true)
+      if (id === 0) break // front-compacted: first empty slot ends the pocket
+      const count = view.getUint16(o + 2, true)
+      if (id >= TM_HM_ITEM_ID_MIN && id <= TM_HM_ITEM_ID_MAX && count > 0) {
+        owned.push(id)
+      }
+    }
+    return owned
+  },
+}
+
+// TM Case pocket, relative to the general-block base (0 or 0x40000).
+const TM_POCKET_OFFSET = 0x98c
+const TM_POCKET_CAPACITY = 100 // 92 TMs + 8 HMs
+
+/** Pick the active general/small block base (0 or 0x40000) by save counter. */
+function selectGeneralBase(view: DataView, paired: boolean): number {
+  if (!paired) return 0
+  const small1 = readU32(view, DPPT_OFFSETS.smallBlockSize - 16)
+  const small2 = readU32(view, DPPT_OFFSETS.smallBlockSize + BLOCK2 - 16)
+  if (isInvalidCounter(small1) || (!isInvalidCounter(small2) && small2 > small1)) {
+    return BLOCK2
+  }
+  return 0
 }
 
 function readU32(view: DataView, off: number): number {

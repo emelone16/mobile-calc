@@ -274,6 +274,40 @@ textarea {
   cursor: pointer;
 }
 
+/* The name/type portion of a move row: a transparent button that fills the
+ * left side and opens the move-detail sheet. */
+.move-row__tap {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  flex: 1;
+  min-width: 0;
+  min-height: var(--control-h);
+  padding: 0;
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+
+/* The damage figure on the right: its own button so a tap flips crit numbers
+ * without triggering the detail sheet. */
+.move-row__dmg-btn {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  min-height: var(--control-h);
+  padding: 0 0 0 var(--sp-2);
+  background: transparent;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
 .move-row__name {
   overflow: hidden;
   text-overflow: ellipsis;
@@ -409,6 +443,18 @@ textarea {
 
 .picker-row + .picker-row {
   border-top: 1px solid var(--border);
+}
+
+/* A move that isn't learnable yet (level too low, or a TM/HM not in the bag).
+ * Dimmed to read as unavailable, but still tappable. */
+.picker-row--locked {
+  opacity: 0.45;
+}
+
+/* Rows disabled outright (already on the set) get the standard muted look. */
+.picker-row:disabled {
+  opacity: 0.5;
+  cursor: default;
 }
 
 .picker-group-header {

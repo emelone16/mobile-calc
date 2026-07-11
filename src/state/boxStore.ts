@@ -3,14 +3,23 @@ import { openDB, type IDBPDatabase } from 'idb'
 import type { SetState } from '../save/types'
 
 let dbp: Promise<IDBPDatabase> | null = null
-const db = () => (dbp ??= openDB('dcm', 1, {
-  upgrade(d) { d.createObjectStore('box', { autoIncrement: true }) },
+const db = () => (dbp ??= openDB('dcm', 2, {
+  upgrade(d) {
+    if (!d.objectStoreNames.contains('box')) d.createObjectStore('box', { autoIncrement: true })
+    // 'meta' holds small singletons keyed by name, e.g. the bag's owned TM moves.
+    if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta')
+  },
 }))
+
+const OWNED_TMS_KEY = 'ownedTmMoves'
 
 interface BoxStore {
   sets: SetState[]
+  /** Moves the player owns a TM/HM for; null until a save is imported. */
+  ownedTmMoves: string[] | null
   load(): Promise<void>
   addMany(sets: SetState[]): Promise<void>
+  setOwnedTmMoves(moves: string[]): Promise<void>
   clear(): Promise<void>
   exportJson(): string
 }
@@ -22,8 +31,18 @@ function sig(s: SetState): string {
 
 export const useBoxStore = create<BoxStore>((set, get) => ({
   sets: [],
+  ownedTmMoves: null,
   async load() {
-    set({ sets: (await (await db()).getAll('box')) as SetState[] })
+    const d = await db()
+    const [sets, owned] = await Promise.all([
+      d.getAll('box') as Promise<SetState[]>,
+      d.get('meta', OWNED_TMS_KEY) as Promise<string[] | undefined>,
+    ])
+    set({ sets, ownedTmMoves: owned ?? null })
+  },
+  async setOwnedTmMoves(moves) {
+    await (await db()).put('meta', moves, OWNED_TMS_KEY)
+    set({ ownedTmMoves: moves })
   },
   async addMany(incoming) {
     const d = await db()
@@ -39,8 +58,10 @@ export const useBoxStore = create<BoxStore>((set, get) => ({
     await get().load()
   },
   async clear() {
-    await (await db()).clear('box')
-    set({ sets: [] })
+    const d = await db()
+    await d.clear('box')
+    await d.delete('meta', OWNED_TMS_KEY)
+    set({ sets: [], ownedTmMoves: null })
   },
   exportJson() { return JSON.stringify(get().sets, null, 2) },
 }))

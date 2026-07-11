@@ -47,6 +47,8 @@ export interface SaveReader {
   detect(buf: ArrayBuffer): boolean
   /** decrypt + unshuffle + extract; pure, no DOM */
   read(buf: ArrayBuffer): RawMon[]
+  /** Owned TM/HM bag item ids, when the reader supports bag parsing. */
+  readBag?(buf: ArrayBuffer): number[]
 }
 
 export interface MappedMon extends SetState {}

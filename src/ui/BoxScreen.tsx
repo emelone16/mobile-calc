@@ -18,13 +18,15 @@ function iconUrl(species: string) {
 export function BoxScreen() {
   const navigate = useNavigate()
   const game = useGameStore(s => s.game)
-  const { sets, addMany, clear } = useBoxStore()
+  const { sets, addMany, clear, setOwnedTmMoves } = useBoxStore()
   const { setAttacker } = useCalcStore()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [pasteOpen, setPasteOpen] = useState(false)
   const [pasteText, setPasteText] = useState('')
   const [reviewSets, setReviewSets] = useState<SetState[] | null>(null)
+  // Owned TM/HM moves from the save being reviewed; applied on commit.
+  const [pendingTms, setPendingTms] = useState<string[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   if (!game) return null
@@ -66,11 +68,12 @@ export function BoxScreen() {
     if (!file) return
     setError(null)
     try {
-      const parsed = await importSave(g, file)
+      const { sets: parsed, ownedTmMoves } = await importSave(g, file)
       if (parsed.length === 0) {
         setError('No Pokémon found in save file.')
         return
       }
+      setPendingTms(ownedTmMoves)
       setReviewSets(parsed)
     } catch (err) {
       setError(String(err))
@@ -79,6 +82,8 @@ export function BoxScreen() {
 
   function commitReview() {
     if (reviewSets) addMany(reviewSets)
+    if (pendingTms) setOwnedTmMoves(pendingTms)
+    setPendingTms(null)
     setReviewSets(null)
   }
 
@@ -157,9 +162,16 @@ export function BoxScreen() {
         </div>
       </BottomSheet>
 
-      <BottomSheet open={!!reviewSets} title="Review import" onClose={() => setReviewSets(null)}>
+      <BottomSheet
+        open={!!reviewSets}
+        title="Review import"
+        onClose={() => { setReviewSets(null); setPendingTms(null) }}
+      >
         <div className="col">
-          <div className="muted">{reviewSets?.length ?? 0} Pokémon found</div>
+          <div className="muted">
+            {reviewSets?.length ?? 0} Pokémon found
+            {pendingTms && pendingTms.length > 0 && ` · ${pendingTms.length} TM/HM moves in bag`}
+          </div>
           <div className="col">
             {reviewSets?.map((s, i) => (
               <div key={i} className="card" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
