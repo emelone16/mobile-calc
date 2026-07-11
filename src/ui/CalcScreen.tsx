@@ -3,11 +3,11 @@ import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
 import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
-import { computeStats, runCalc } from '../engine/calcService'
+import { computeStats, applyBoost, runCalc } from '../engine/calcService'
 import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
-import type { SetState } from '../save/types'
+import type { SetState, BoostKey } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
 import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 
@@ -20,6 +20,29 @@ function trainerSetToSetState(t: TrainerSet): SetState {
 
 const STAT_KEYS: StatKey[] = ['hp', 'at', 'df', 'sa', 'sd', 'sp']
 const STAT_LABELS: Record<StatKey, string> = { hp: 'HP', at: 'Atk', df: 'Def', sa: 'SpA', sd: 'SpD', sp: 'Spe' }
+
+// Stats that have in-battle stat stages (everything except HP).
+const BOOST_KEYS: BoostKey[] = ['at', 'df', 'sa', 'sd', 'sp']
+
+// Common stat-boosting moves and the stages they add. Tapping one applies its
+// deltas on top of the current boosts (clamped -6..+6), just like using the
+// move in-battle. A second tap stacks, mirroring a second turn of setup.
+const BOOST_MOVES: Array<{ name: string; deltas: Partial<Record<BoostKey, number>> }> = [
+  { name: 'Swords Dance', deltas: { at: 2 } },
+  { name: 'Nasty Plot', deltas: { sa: 2 } },
+  { name: 'Dragon Dance', deltas: { at: 1, sp: 1 } },
+  { name: 'Calm Mind', deltas: { sa: 1, sd: 1 } },
+  { name: 'Bulk Up', deltas: { at: 1, df: 1 } },
+  { name: 'Quiver Dance', deltas: { sa: 1, sd: 1, sp: 1 } },
+  { name: 'Agility', deltas: { sp: 2 } },
+  { name: 'Iron Defense', deltas: { df: 2 } },
+  { name: 'Amnesia', deltas: { sd: 2 } },
+  { name: 'Growth', deltas: { at: 1, sa: 1 } },
+]
+
+function fmtStage(n: number): string {
+  return n > 0 ? `+${n}` : `${n}`
+}
 
 // Which stat each nature raises (+10%) and lowers (-10%); neutral natures absent.
 const NATURE_EFFECTS: Record<string, { plus: StatKey; minus: StatKey }> = {
@@ -125,6 +148,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [showMovePicker, setShowMovePicker] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
+  const [showBoosts, setShowBoosts] = useState(false)
 
   // Grouped by (split, location) in story order, so the trainer picker reads
   // top-to-bottom the way the game is actually played instead of by trId.
@@ -202,6 +226,31 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   function patchEv(key: StatKey, v: number) {
     if (!value) return
     onChange({ ...value, evs: { ...value.evs, [key]: v } })
+  }
+
+  // Boosts are stored sparsely: a stage of 0 is dropped, and an all-zero table
+  // becomes `undefined` so unboosted mons stay clean in storage and calc.
+  function writeBoosts(next: Partial<Record<BoostKey, number>>) {
+    if (!value) return
+    const clean: Partial<Record<BoostKey, number>> = {}
+    for (const k of BOOST_KEYS) {
+      const s = next[k]
+      if (typeof s === 'number' && s !== 0) clean[k] = Math.max(-6, Math.min(6, s))
+    }
+    onChange({ ...value, boosts: Object.keys(clean).length ? clean : undefined })
+  }
+  function setBoost(key: BoostKey, stage: number) {
+    if (!value) return
+    writeBoosts({ ...value.boosts, [key]: stage })
+  }
+  function applyBoostMove(deltas: Partial<Record<BoostKey, number>>) {
+    if (!value) return
+    const next: Partial<Record<BoostKey, number>> = { ...value.boosts }
+    for (const k of BOOST_KEYS) {
+      const d = deltas[k]
+      if (typeof d === 'number') next[k] = (next[k] ?? 0) + d
+    }
+    writeBoosts(next)
   }
 
   function toggleMove(m: string) {
@@ -415,15 +464,24 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
               <div className="label">Stats</div>
               <div className="stat-row">
                 {STAT_KEYS.map(k => {
+                  const stage = k === 'hp' ? 0 : (value.boosts?.[k as BoostKey] ?? 0)
+                  const shown = stage !== 0 ? applyBoost(stats[k], stage) : stats[k]
                   const tone =
-                    natureEffect?.plus === k ? 'var(--good)'
-                      : natureEffect?.minus === k ? 'var(--danger)'
-                        : 'var(--text)'
-                  const mark = natureEffect?.plus === k ? '＋' : natureEffect?.minus === k ? '－' : ''
+                    stage > 0 ? 'var(--good)'
+                      : stage < 0 ? 'var(--danger)'
+                        : natureEffect?.plus === k ? 'var(--good)'
+                          : natureEffect?.minus === k ? 'var(--danger)'
+                            : 'var(--text)'
+                  const mark = stage === 0
+                    ? (natureEffect?.plus === k ? '＋' : natureEffect?.minus === k ? '－' : '')
+                    : ''
                   return (
                     <div className="stat-cell" key={k}>
                       <span className="muted" style={{ fontSize: 11 }}>{STAT_LABELS[k]}</span>
-                      <span style={{ fontWeight: 700, color: tone }}>{stats[k]}{mark}</span>
+                      <span style={{ fontWeight: 700, color: tone }}>{shown}{mark}</span>
+                      {stage !== 0 && (
+                        <span style={{ fontSize: 10, color: tone }}>{fmtStage(stage)}</span>
+                      )}
                     </div>
                   )
                 })}
@@ -431,9 +489,73 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
             </>
           )}
 
-          <button className="btn btn--sm" style={{ alignSelf: 'flex-start' }} onClick={() => setExpanded(v => !v)}>
-            {expanded ? 'Hide' : 'Show'} IVs / EVs
-          </button>
+          <div className="row--between">
+            <button className="btn btn--sm" onClick={() => setShowBoosts(v => !v)}>
+              {showBoosts ? 'Hide' : 'Show'} Boosts
+            </button>
+            <button className="btn btn--sm" onClick={() => setExpanded(v => !v)}>
+              {expanded ? 'Hide' : 'Show'} IVs / EVs
+            </button>
+          </div>
+
+          {showBoosts && (
+            <div className="col" style={{ gap: 8 }}>
+              <div className="row--between">
+                <div className="label" style={{ margin: 0 }}>Stat boosts</div>
+                {value.boosts && (
+                  <button className="btn btn--sm" onClick={() => writeBoosts({})}>Reset</button>
+                )}
+              </div>
+              <div className="scroll-x" style={{ paddingBottom: 4 }}>
+                {BOOST_MOVES.map(mv => (
+                  <button
+                    key={mv.name}
+                    className="chip"
+                    style={{ flexShrink: 0 }}
+                    onClick={() => applyBoostMove(mv.deltas)}
+                    title={BOOST_KEYS.filter(k => mv.deltas[k])
+                      .map(k => `${STAT_LABELS[k]} ${fmtStage(mv.deltas[k]!)}`).join(', ')}
+                  >
+                    {mv.name}
+                  </button>
+                ))}
+              </div>
+              <div className="col" style={{ gap: 4 }}>
+                {BOOST_KEYS.map(k => {
+                  const stage = value.boosts?.[k] ?? 0
+                  return (
+                    <div className="row--between" key={k}>
+                      <span style={{ fontWeight: 600 }}>{STAT_LABELS[k]}</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <button
+                          className="btn btn--sm"
+                          disabled={stage <= -6}
+                          onClick={() => setBoost(k, stage - 1)}
+                          aria-label={`Lower ${STAT_LABELS[k]} boost`}
+                        >
+                          −
+                        </button>
+                        <span style={{
+                          minWidth: 32, textAlign: 'center', fontWeight: 700,
+                          color: stage > 0 ? 'var(--good)' : stage < 0 ? 'var(--danger)' : 'var(--text)',
+                        }}>
+                          {fmtStage(stage)}
+                        </span>
+                        <button
+                          className="btn btn--sm"
+                          disabled={stage >= 6}
+                          onClick={() => setBoost(k, stage + 1)}
+                          aria-label={`Raise ${STAT_LABELS[k]} boost`}
+                        >
+                          +
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
 
           {expanded && (
             <div className="col">

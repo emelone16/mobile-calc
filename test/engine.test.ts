@@ -39,6 +39,26 @@ describe('engine smoke', () => {
     const out = runCalc(game, atk, def, 'Dragon Claw', field)
     expect(out.maxPct).toBe(0)
   })
+
+  it('reflects attacker stat boosts (Swords Dance +2 Atk ≈ 2x damage)', () => {
+    const game = loadRpFromDisk()
+    const atk = set({ species: 'Garchomp', level: 78, nature: 'Jolly', moves: ['Earthquake'] })
+    const def = set({ species: 'Tyranitar', level: 78, nature: 'Careful' })
+    const base = runCalc(game, atk, def, 'Earthquake', field)
+    const boosted = runCalc(game, { ...atk, boosts: { at: 2 } }, def, 'Earthquake', field)
+    // +2 Atk is a x2 multiplier ((2+2)/2) on the physical attack stat.
+    expect(boosted.maxPct).toBeGreaterThan(base.maxPct * 1.9)
+    expect(boosted.maxPct).toBeLessThanOrEqual(base.maxPct * 2.05)
+  })
+
+  it('reflects defender stat boosts (Iron Defense +2 Def lowers damage)', () => {
+    const game = loadRpFromDisk()
+    const atk = set({ species: 'Garchomp', level: 78, nature: 'Jolly', moves: ['Earthquake'] })
+    const def = set({ species: 'Tyranitar', level: 78, nature: 'Careful' })
+    const base = runCalc(game, atk, def, 'Earthquake', field)
+    const boosted = runCalc(game, atk, { ...def, boosts: { df: 2 } }, 'Earthquake', field)
+    expect(boosted.maxPct).toBeLessThan(base.maxPct)
+  })
 })
 
 // Correctness net #1: calcs captured as fixtures. Each fixture =

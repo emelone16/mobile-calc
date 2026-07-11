@@ -1,4 +1,4 @@
-import type { StatsTable, SaveEnums } from '../data/types'
+import type { StatsTable, StatKey, SaveEnums } from '../data/types'
 
 /** The unified box entry. BOTH clipboard import and .sav import produce this. */
 export interface SetState {
@@ -10,8 +10,18 @@ export interface SetState {
   moves: string[]
   ivs: StatsTable
   evs: Partial<StatsTable>
+  /**
+   * In-battle stat-stage boosts (-6..+6) from moves like Swords Dance, applied
+   * on top of the computed stats during damage calc. HP is never boosted, so it
+   * is omitted. Absent means no boosts (all stages 0).
+   */
+  boosts?: Partial<BoostsTable>
   source?: 'clipboard' | 'save'
 }
+
+/** Boostable stats — every stat except HP, which has no stat stages. */
+export type BoostKey = Exclude<StatKey, 'hp'>
+export type BoostsTable = Record<BoostKey, number>
 
 /** Raw fields pulled out of one decrypted save Pokemon, IDs not yet named. */
 export interface RawMon {
