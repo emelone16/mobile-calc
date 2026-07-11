@@ -186,6 +186,61 @@ export function MoveDetailSheet({
 }
 
 // ---------------------------------------------------------------------------
+// Replace-slot picker (choose which move a new move overrides)
+// ---------------------------------------------------------------------------
+
+export interface ReplaceSlotSheetProps {
+  open: boolean
+  onClose(): void
+  game: GameData
+  /** The move being added, which will overwrite the chosen slot. */
+  incoming: string | null
+  currentMoves: string[]
+  /** Original moveset, to tag each slot as a default or an existing override. */
+  defaultMoves?: string[]
+  onPick(index: number): void
+}
+
+/** Shown when adding a move to a full set: pick which of the four it replaces. */
+export function ReplaceSlotSheet({
+  open, onClose, game, incoming, currentMoves, defaultMoves, onPick,
+}: ReplaceSlotSheetProps) {
+  return (
+    <BottomSheet
+      open={open}
+      title={incoming ? `Replace with ${incoming}` : 'Replace move'}
+      onClose={onClose}
+    >
+      <div>
+        <div className="muted" style={{ padding: '0 12px 8px' }}>
+          Choose which move to override:
+        </div>
+        {currentMoves.map((move, i) => {
+          const isOverride = defaultMoves ? !defaultMoves.includes(move) : false
+          return (
+            <button
+              key={`${move}-${i}`}
+              className="picker-row"
+              onClick={() => { onPick(i); onClose() }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {move}
+                </span>
+                <span className="muted" style={{ fontSize: 12 }}>
+                  {isOverride ? 'override' : 'default'}
+                </span>
+              </span>
+              <MoveSummary move={game.moves[move]} />
+            </button>
+          )
+        })}
+      </div>
+    </BottomSheet>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Move chooser (add / swap)
 // ---------------------------------------------------------------------------
 

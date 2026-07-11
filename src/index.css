@@ -314,6 +314,15 @@ textarea {
   white-space: nowrap;
 }
 
+/* Marks a move slot holding a temporary override (not the imported move). */
+.move-override-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--warn, #f59e0b);
+}
+
 .move-row__dmg {
   flex-shrink: 0;
   font-variant-numeric: tabular-nums;
