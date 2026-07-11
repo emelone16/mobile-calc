@@ -23,6 +23,12 @@ export interface SetState {
    */
   paralyzed?: boolean
   source?: 'clipboard' | 'save'
+  /**
+   * Set when the mon is being previewed as an evolution in the calc. Holds the
+   * species it was before the first evolve tap, so "revert" can restore the
+   * original box Pokémon. Absent means the mon is its own, un-previewed species.
+   */
+  originalSpecies?: string
 }
 
 /** Boostable stats — every stat except HP, which has no stat stages. */

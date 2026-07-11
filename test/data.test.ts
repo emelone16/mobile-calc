@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { loadRpFromDisk } from './helpers'
 import { HACKS, DEFAULT_HACK_ID, RENEGADE_PLATINUM } from '../src/data/loader'
+import { buildEvolutionFamily } from '../src/data/evolutionFamily'
 
 describe('composed GameData', () => {
   const game = loadRpFromDisk()
@@ -75,6 +76,31 @@ describe('composed GameData', () => {
     ])
     // Base-stage species have no pre-evolution.
     expect(game.species['Bulbasaur']?.preEvolutions).toBeUndefined()
+  })
+})
+
+describe('evolution family', () => {
+  const game = loadRpFromDisk()
+
+  it('orders a linear family root-first', () => {
+    expect(buildEvolutionFamily(game, 'Ivysaur')).toEqual(['Bulbasaur', 'Ivysaur', 'Venusaur'])
+    // Works the same starting from the root or the final stage.
+    expect(buildEvolutionFamily(game, 'Charmander')).toEqual(['Charmander', 'Charmeleon', 'Charizard'])
+  })
+
+  it('includes every branch (Eevee family)', () => {
+    const fam = buildEvolutionFamily(game, 'Vaporeon')
+    expect(fam[0]).toBe('Eevee')
+    expect(fam).toContain('Glaceon')
+    expect(fam.length).toBe(8) // Eevee + 7 eeveelutions
+  })
+
+  it('returns a singleton for a species with no evolution line', () => {
+    expect(buildEvolutionFamily(game, 'Ditto')).toEqual(['Ditto'])
+  })
+
+  it('returns empty for an unknown species', () => {
+    expect(buildEvolutionFamily(game, 'NotAMon')).toEqual([])
   })
 })
 

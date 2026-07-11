@@ -479,6 +479,47 @@ textarea {
   padding-bottom: var(--sp-2);
 }
 
+/* Evolution-line learnset comparison: a scrollable grid, one column per stage,
+ * with the current species' column highlighted and a sticky move-name column. */
+.evo-table {
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+  width: max-content;
+}
+.evo-table th,
+.evo-table td {
+  padding: var(--sp-1) var(--sp-2);
+  text-align: center;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.evo-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+  font-weight: 700;
+}
+.evo-move {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--surface);
+  text-align: left !important;
+  font-weight: 600;
+}
+.evo-table thead .evo-move {
+  z-index: 2;
+}
+.evo-col--current {
+  background: var(--surface-3);
+  color: var(--accent);
+}
+.evo-cell--none {
+  color: var(--muted);
+  opacity: 0.5;
+}
+
 .divider {
   height: 1px;
   background: var(--border);

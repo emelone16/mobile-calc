@@ -8,10 +8,11 @@ import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import {
   MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet,
+  EvolutionLearnsetSheet,
 } from './components/MoveSheets'
 import { NATURES } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
-import type { StatKey, StatsTable, Trainer, TrainerSet, GameData, SpeciesData } from '../data/types'
+import type { StatKey, StatsTable, Trainer, TrainerSet, GameData } from '../data/types'
 import type { FieldState } from '../state/calcStore'
 import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 
@@ -87,26 +88,8 @@ function iconUrl(species: string) {
   return `https://img.pokemondb.net/sprites/gen4-dp/icon/${toSpriteName(species)}.png`
 }
 
-// Compact evolution summary shown under the species' type chips: where this
-// Pokémon comes from and what it evolves into, with the RP-specific method.
-function EvolutionLine({ species }: { species: SpeciesData }) {
-  const from = species.preEvolutions ?? []
-  const into = species.evolutions ?? []
-  if (from.length === 0 && into.length === 0) return null
-  return (
-    <div className="muted" style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {from.length > 0 && (
-        <span>
-          ← {from.map(e => `${e.from} (${e.method})`).join(', ')}
-        </span>
-      )}
-      {into.length > 0 && (
-        <span>
-          → {into.map(e => `${e.into} (${e.method})`).join(', ')}
-        </span>
-      )}
-    </div>
-  )
+function sumStats(t: StatsTable | undefined): number {
+  return t ? STAT_KEYS.reduce((n, k) => n + (t[k] ?? 0), 0) : 0
 }
 
 export function CalcScreen() {
@@ -185,6 +168,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   // Open move chooser: {mode:'add'} appends, {mode:'replace',index} swaps a slot.
   const [chooser, setChooser] = useState<{ mode: 'add' } | { mode: 'replace'; index: number } | null>(null)
   const [showLearnset, setShowLearnset] = useState(false)
+  const [showEvoLearnsets, setShowEvoLearnsets] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showBoosts, setShowBoosts] = useState(false)
@@ -209,6 +193,13 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const itemNames = useMemo(() => ['None', ...getAllItemNames(game)], [game])
   const speciesData = value ? game.species[value.species] : undefined
   const abilityOptions = speciesData ? Object.values(speciesData.abilities) : []
+  const evolutions = speciesData?.evolutions ?? []
+  // Whether this species belongs to an evolution line worth comparing/evolving.
+  const hasEvoLine = evolutions.length > 0 || (speciesData?.preEvolutions?.length ?? 0) > 0
+  // Base-stat-total shift when previewing an evolution, vs the box original.
+  const bstDelta = value?.originalSpecies && speciesData
+    ? sumStats(speciesData.baseStats) - sumStats(game.species[value.originalSpecies]?.baseStats)
+    : 0
   // The headline numbers: actual stats at this level/nature/IV/EV spread.
   const stats = useMemo(() => {
     if (!value) return null
@@ -317,6 +308,18 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     onChange({ ...value, moves: value.moves.filter((_, idx) => idx !== i) })
   }
 
+  // Preview an evolution: swap the species (stats recompute from the new base
+  // stats) while remembering the first pre-evolution so it can be reverted.
+  function evolveTo(into: string) {
+    if (!value) return
+    onChange({ ...value, species: into, originalSpecies: value.originalSpecies ?? value.species })
+  }
+  function revertEvolution() {
+    if (!value?.originalSpecies) return
+    const { originalSpecies, ...rest } = value
+    onChange({ ...rest, species: originalSpecies })
+  }
+
   return (
     <div className="card col">
       <div className="row--between">
@@ -419,7 +422,48 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
               ))}
             </div>
           )}
-          {speciesData && <EvolutionLine species={speciesData} />}
+          {value && speciesData && (hasEvoLine || value.originalSpecies) && (
+            <div className="col" style={{ gap: 4 }}>
+              <div className="scroll-x" style={{ paddingBottom: 0, gap: 6 }}>
+                {value.originalSpecies && (
+                  <button
+                    className="chip"
+                    style={{ flexShrink: 0 }}
+                    onClick={revertEvolution}
+                    title={`Revert to ${value.originalSpecies}`}
+                  >
+                    ↺ {value.originalSpecies}
+                  </button>
+                )}
+                {evolutions.map(evo => (
+                  <button
+                    key={evo.into}
+                    className="chip"
+                    style={{ flexShrink: 0 }}
+                    onClick={() => evolveTo(evo.into)}
+                    title={`Evolve via ${evo.method}`}
+                  >
+                    → {evo.into}
+                    <span className="muted" style={{ marginLeft: 4, fontSize: 11 }}>{evo.method}</span>
+                  </button>
+                ))}
+                {hasEvoLine && (
+                  <button
+                    className="chip"
+                    style={{ flexShrink: 0 }}
+                    onClick={() => setShowEvoLearnsets(true)}
+                  >
+                    ⇋ Learnsets
+                  </button>
+                )}
+              </div>
+              {value.originalSpecies && (
+                <span className="muted" style={{ fontSize: 12 }}>
+                  Previewing evolution · BST {bstDelta >= 0 ? '+' : ''}{bstDelta} vs {value.originalSpecies}
+                </span>
+              )}
+            </div>
+          )}
           {!isYours && trainerName && (
             <span className="muted" style={{ fontSize: 12 }}>Trainer: {trainerName}</span>
           )}
@@ -757,6 +801,12 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         monLevel={value?.level}
         ownedTmMoves={ownedTmMoves}
         onAdd={addMove}
+      />
+      <EvolutionLearnsetSheet
+        open={showEvoLearnsets}
+        onClose={() => setShowEvoLearnsets(false)}
+        game={game}
+        species={value?.species}
       />
     </div>
   )
