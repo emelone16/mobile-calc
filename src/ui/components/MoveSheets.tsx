@@ -4,6 +4,7 @@
 //  - LearnsetSheet:    browse a species' level-up moves and TMs.
 import { useMemo, useState } from 'react'
 import { BottomSheet } from './BottomSheet'
+import { buildEvolutionFamily } from '../../data/evolutionFamily'
 import type { GameData, MoveData } from '../../data/types'
 import type { CalcOutcome } from '../../engine/calcService'
 
@@ -374,6 +375,150 @@ export function MoveChooserSheet({
           )
         })}
       </div>
+    </BottomSheet>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Evolution-line learnset comparison
+// ---------------------------------------------------------------------------
+
+export interface EvolutionLearnsetSheetProps {
+  open: boolean
+  onClose(): void
+  game: GameData
+  /** The mon whose evolution family is compared; its column is highlighted. */
+  species?: string
+}
+
+/**
+ * Side-by-side learnsets for every stage in a species' evolution family, so you
+ * can see at a glance which moves each stage gets (and at what level) — e.g. a
+ * move the fully-evolved form learns that the base stage never does.
+ */
+export function EvolutionLearnsetSheet({ open, onClose, game, species }: EvolutionLearnsetSheetProps) {
+  const [tab, setTab] = useState<'level' | 'tm'>('level')
+  const [query, setQuery] = useState('')
+
+  const family = useMemo(
+    () => (species ? buildEvolutionFamily(game, species) : []),
+    [game, species],
+  )
+  // Per-stage lookups, aligned by index with `family`.
+  const levelMaps = useMemo(() => family.map(s => minLevelByMove(game, s)), [game, family])
+  const tmSets = useMemo(
+    () => family.map(s => new Set(game.species[s]?.tms ?? [])),
+    [game, family],
+  )
+
+  const moves = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    if (tab === 'level') {
+      // Union of level-up moves, sorted by the earliest level any stage learns.
+      const minAcross = new Map<string, number>()
+      for (const m of levelMaps) {
+        for (const [move, lvl] of m) {
+          const cur = minAcross.get(move)
+          if (cur === undefined || lvl < cur) minAcross.set(move, lvl)
+        }
+      }
+      let rows = [...minAcross.entries()]
+      if (q) rows = rows.filter(([m]) => m.toLowerCase().includes(q))
+      rows.sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]))
+      return rows.map(([m]) => m)
+    }
+    const union = new Set<string>()
+    for (const s of tmSets) for (const m of s) union.add(m)
+    let rows = [...union]
+    if (q) rows = rows.filter(m => m.toLowerCase().includes(q))
+    rows.sort((a, b) => a.localeCompare(b))
+    return rows
+  }, [tab, query, levelMaps, tmSets])
+
+  function handleClose() {
+    setQuery('')
+    onClose()
+  }
+
+  function cellFor(i: number, move: string): string {
+    if (tab === 'level') {
+      const lvl = levelMaps[i]!.get(move)
+      return lvl !== undefined ? String(lvl) : '·'
+    }
+    return tmSets[i]!.has(move) ? '✓' : '·'
+  }
+
+  return (
+    <BottomSheet
+      open={open}
+      title={species ? `${species} — evolution learnsets` : 'Evolution learnsets'}
+      onClose={handleClose}
+      pinned={
+        <div className="col" style={{ gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              className={`chip ${tab === 'level' ? 'chip--active' : ''}`}
+              onClick={() => setTab('level')}
+            >
+              Level-up
+            </button>
+            <button
+              className={`chip ${tab === 'tm' ? 'chip--active' : ''}`}
+              onClick={() => setTab('tm')}
+            >
+              TMs
+            </button>
+          </div>
+          <input
+            className="sheet-search"
+            type="text"
+            placeholder="Search moves…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+          <div className="muted" style={{ fontSize: 12 }}>
+            {tab === 'level' ? 'Numbers = level learned' : '✓ = learns via TM'} · · = not learned
+          </div>
+        </div>
+      }
+    >
+      {family.length <= 1 ? (
+        <div className="muted" style={{ padding: 12 }}>
+          This Pokémon has no evolution line to compare.
+        </div>
+      ) : moves.length === 0 ? (
+        <div className="muted" style={{ padding: 12 }}>No matches</div>
+      ) : (
+        <div style={{ overflowX: 'auto' }}>
+          <table className="evo-table">
+            <thead>
+              <tr>
+                <th className="evo-move">Move</th>
+                {family.map(s => (
+                  <th key={s} className={s === species ? 'evo-col--current' : undefined}>{s}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {moves.map(move => (
+                <tr key={move}>
+                  <td className="evo-move">{move}</td>
+                  {family.map((s, i) => {
+                    const cell = cellFor(i, move)
+                    const current = s === species
+                    const none = cell === '·'
+                    const cls = [
+                      current ? 'evo-col--current' : '',
+                      none ? 'evo-cell--none' : '',
+                    ].filter(Boolean).join(' ')
+                    return <td key={s} className={cls || undefined}>{cell}</td>
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </BottomSheet>
   )
 }

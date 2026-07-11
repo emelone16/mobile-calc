@@ -1,4 +1,4 @@
-import type { GameData, MechanicsProfile, SourceBundle, SaveEnums } from './types'
+import type { GameData, MechanicsProfile, SourceBundle, SaveEnums, EvolutionBundle } from './types'
 import { composeGameData } from './composeGameData'
 
 // RP profile = the typed version of the original `setGameSettings` block.
@@ -13,6 +13,8 @@ export interface HackConfig {
   id: string
   title: string
   bundleFile: string          // file under public/data/
+  /** Optional companion evolution map under public/data/ (forward links). */
+  evolutionsFile?: string
   profile: MechanicsProfile
   /** Override save enums for reindexing hacks; RP omits it. */
   saveEnums?: SaveEnums
@@ -24,6 +26,7 @@ export const HACKS: Record<string, HackConfig> = {
     id: 'renegade-platinum',
     title: 'Renegade Platinum',
     bundleFile: 'renegade-platinum.json',
+    evolutionsFile: 'renegade-platinum-evolutions.json',
     profile: RENEGADE_PLATINUM,
   },
 }
@@ -41,7 +44,23 @@ export async function loadHack(
   // A bundle-supplied `includes` block (reindexing hacks) takes precedence,
   // else the config's saveEnums, else the gen default applied downstream.
   if (config.saveEnums && !src.includes) src.includes = config.saveEnums
-  return composeGameData(src, config.id, config.title, config.profile)
+  const evolutions = await loadEvolutions(config, base)
+  return composeGameData(src, config.id, config.title, config.profile, evolutions)
+}
+
+/** Fetch the optional evolution companion file; missing/unreadable is non-fatal. */
+async function loadEvolutions(
+  config: HackConfig,
+  base: string,
+): Promise<EvolutionBundle | undefined> {
+  if (!config.evolutionsFile) return undefined
+  try {
+    const res = await fetch(`${base}data/${config.evolutionsFile}`)
+    if (!res.ok) return undefined
+    return (await res.json()) as EvolutionBundle
+  } catch {
+    return undefined
+  }
 }
 
 export async function loadHackById(id: string, base?: string): Promise<GameData> {

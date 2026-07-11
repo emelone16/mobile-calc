@@ -1,0 +1,1452 @@
+{
+  "Bulbasaur": [
+    {
+      "into": "Ivysaur",
+      "method": "Level 16"
+    }
+  ],
+  "Ivysaur": [
+    {
+      "into": "Venusaur",
+      "method": "Level 32"
+    }
+  ],
+  "Charmander": [
+    {
+      "into": "Charmeleon",
+      "method": "Level 16"
+    }
+  ],
+  "Charmeleon": [
+    {
+      "into": "Charizard",
+      "method": "Level 36"
+    }
+  ],
+  "Squirtle": [
+    {
+      "into": "Wartortle",
+      "method": "Level 16"
+    }
+  ],
+  "Wartortle": [
+    {
+      "into": "Blastoise",
+      "method": "Level 36"
+    }
+  ],
+  "Pikachu": [
+    {
+      "into": "Raichu",
+      "method": "Thunder Stone"
+    }
+  ],
+  "Clefairy": [
+    {
+      "into": "Clefable",
+      "method": "Moon Stone"
+    }
+  ],
+  "Jigglypuff": [
+    {
+      "into": "Wigglytuff",
+      "method": "Moon Stone"
+    }
+  ],
+  "Chikorita": [
+    {
+      "into": "Bayleef",
+      "method": "Level 16"
+    }
+  ],
+  "Bayleef": [
+    {
+      "into": "Meganium",
+      "method": "Level 32"
+    }
+  ],
+  "Cyndaquil": [
+    {
+      "into": "Quilava",
+      "method": "Level 14"
+    }
+  ],
+  "Quilava": [
+    {
+      "into": "Typhlosion",
+      "method": "Level 36"
+    }
+  ],
+  "Totodile": [
+    {
+      "into": "Croconaw",
+      "method": "Level 18"
+    }
+  ],
+  "Croconaw": [
+    {
+      "into": "Feraligatr",
+      "method": "Level 30"
+    }
+  ],
+  "Igglybuff": [
+    {
+      "into": "Jigglypuff",
+      "method": "Friendship"
+    }
+  ],
+  "Togepi": [
+    {
+      "into": "Togetic",
+      "method": "Friendship"
+    }
+  ],
+  "Togetic": [
+    {
+      "into": "Togekiss",
+      "method": "Shiny Stone"
+    }
+  ],
+  "Cleffa": [
+    {
+      "into": "Clefairy",
+      "method": "Friendship"
+    }
+  ],
+  "Marill": [
+    {
+      "into": "Azumarill",
+      "method": "Level 18"
+    }
+  ],
+  "Snubbull": [
+    {
+      "into": "Granbull",
+      "method": "Level 23"
+    }
+  ],
+  "Tyrogue": [
+    {
+      "into": "Hitmonlee",
+      "method": "Level 20, with an Atk stat > its Def stat"
+    },
+    {
+      "into": "Hitmonchan",
+      "method": "Level 20, with an Atk stat < its Def stat"
+    },
+    {
+      "into": "Hitmontop",
+      "method": "Level 20, with an Atk stat equal to its Def stat"
+    }
+  ],
+  "Treecko": [
+    {
+      "into": "Grovyle",
+      "method": "Level 16"
+    }
+  ],
+  "Grovyle": [
+    {
+      "into": "Sceptile",
+      "method": "Level 36"
+    }
+  ],
+  "Torchic": [
+    {
+      "into": "Combusken",
+      "method": "Level 16"
+    }
+  ],
+  "Combusken": [
+    {
+      "into": "Blaziken",
+      "method": "Level 36"
+    }
+  ],
+  "Mudkip": [
+    {
+      "into": "Marshtomp",
+      "method": "Level 16"
+    }
+  ],
+  "Marshtomp": [
+    {
+      "into": "Swampert",
+      "method": "Level 36"
+    }
+  ],
+  "Ralts": [
+    {
+      "into": "Kirlia",
+      "method": "Level 20"
+    }
+  ],
+  "Kirlia": [
+    {
+      "into": "Gardevoir",
+      "method": "Level 30"
+    },
+    {
+      "into": "Gallade",
+      "method": "Dawn Stone"
+    }
+  ],
+  "Azurill": [
+    {
+      "into": "Marill",
+      "method": "Friendship"
+    }
+  ],
+  "Feebas": [
+    {
+      "into": "Milotic",
+      "method": "Prism Scale"
+    }
+  ],
+  "Duskull": [
+    {
+      "into": "Dusclops",
+      "method": "Level 32"
+    }
+  ],
+  "Dusclops": [
+    {
+      "into": "Dusknoir",
+      "method": "Reaper Cloth"
+    }
+  ],
+  "Turtwig": [
+    {
+      "into": "Grotle",
+      "method": "Level 18"
+    }
+  ],
+  "Grotle": [
+    {
+      "into": "Torterra",
+      "method": "Level 32"
+    }
+  ],
+  "Chimchar": [
+    {
+      "into": "Monferno",
+      "method": "Level 14"
+    }
+  ],
+  "Monferno": [
+    {
+      "into": "Infernape",
+      "method": "Level 36"
+    }
+  ],
+  "Piplup": [
+    {
+      "into": "Prinplup",
+      "method": "Level 16"
+    }
+  ],
+  "Prinplup": [
+    {
+      "into": "Empoleon",
+      "method": "Level 36"
+    }
+  ],
+  "Starly": [
+    {
+      "into": "Staravia",
+      "method": "Level 14"
+    }
+  ],
+  "Mime Jr.": [
+    {
+      "into": "Mr. Mime",
+      "method": "Know Mimic"
+    }
+  ],
+  "Wingull": [
+    {
+      "into": "Pelipper",
+      "method": "Level 25"
+    }
+  ],
+  "Burmy": [
+    {
+      "into": "Wormadam",
+      "method": "Level 20"
+    },
+    {
+      "into": "Wormadam-Sandy",
+      "method": "Level 20"
+    },
+    {
+      "into": "Wormadam-Trash",
+      "method": "Level 20"
+    },
+    {
+      "into": "Mothim",
+      "method": "Level 20"
+    }
+  ],
+  "Koffing": [
+    {
+      "into": "Weezing",
+      "method": "Level 35"
+    }
+  ],
+  "Trapinch": [
+    {
+      "into": "Vibrava",
+      "method": "Level 30"
+    }
+  ],
+  "Vibrava": [
+    {
+      "into": "Flygon",
+      "method": "Level 45"
+    }
+  ],
+  "Caterpie": [
+    {
+      "into": "Metapod",
+      "method": "Level 7"
+    }
+  ],
+  "Metapod": [
+    {
+      "into": "Butterfree",
+      "method": "Level 10"
+    }
+  ],
+  "Weedle": [
+    {
+      "into": "Kakuna",
+      "method": "Level 7"
+    }
+  ],
+  "Kakuna": [
+    {
+      "into": "Beedrill",
+      "method": "Level 10"
+    }
+  ],
+  "Pidgey": [
+    {
+      "into": "Pidgeotto",
+      "method": "Level 18"
+    }
+  ],
+  "Pidgeotto": [
+    {
+      "into": "Pidgeot",
+      "method": "Level 36"
+    }
+  ],
+  "Rattata": [
+    {
+      "into": "Raticate",
+      "method": "Level 20"
+    }
+  ],
+  "Spearow": [
+    {
+      "into": "Fearow",
+      "method": "Level 20"
+    }
+  ],
+  "Ekans": [
+    {
+      "into": "Arbok",
+      "method": "Level 22"
+    }
+  ],
+  "Sandshrew": [
+    {
+      "into": "Sandslash",
+      "method": "Level 22"
+    }
+  ],
+  "Nidoran-F": [
+    {
+      "into": "Nidorina",
+      "method": "Level 16"
+    }
+  ],
+  "Nidorina": [
+    {
+      "into": "Nidoqueen",
+      "method": "Moon Stone"
+    }
+  ],
+  "Nidoran-M": [
+    {
+      "into": "Nidorino",
+      "method": "Level 16"
+    }
+  ],
+  "Nidorino": [
+    {
+      "into": "Nidoking",
+      "method": "Moon Stone"
+    }
+  ],
+  "Vulpix": [
+    {
+      "into": "Ninetales",
+      "method": "Fire Stone"
+    }
+  ],
+  "Zubat": [
+    {
+      "into": "Golbat",
+      "method": "Level 22"
+    }
+  ],
+  "Golbat": [
+    {
+      "into": "Crobat",
+      "method": "Friendship"
+    }
+  ],
+  "Oddish": [
+    {
+      "into": "Gloom",
+      "method": "Level 21"
+    }
+  ],
+  "Gloom": [
+    {
+      "into": "Vileplume",
+      "method": "Leaf Stone"
+    },
+    {
+      "into": "Bellossom",
+      "method": "Sun Stone"
+    }
+  ],
+  "Paras": [
+    {
+      "into": "Parasect",
+      "method": "Level 24"
+    }
+  ],
+  "Venonat": [
+    {
+      "into": "Venomoth",
+      "method": "Level 31"
+    }
+  ],
+  "Diglett": [
+    {
+      "into": "Dugtrio",
+      "method": "Level 26"
+    }
+  ],
+  "Meowth": [
+    {
+      "into": "Persian",
+      "method": "Level 28"
+    }
+  ],
+  "Psyduck": [
+    {
+      "into": "Golduck",
+      "method": "Level 33"
+    }
+  ],
+  "Mankey": [
+    {
+      "into": "Primeape",
+      "method": "Level 28"
+    }
+  ],
+  "Growlithe": [
+    {
+      "into": "Arcanine",
+      "method": "Fire Stone"
+    }
+  ],
+  "Poliwag": [
+    {
+      "into": "Poliwhirl",
+      "method": "Level 25"
+    }
+  ],
+  "Poliwhirl": [
+    {
+      "into": "Poliwrath",
+      "method": "Water Stone"
+    },
+    {
+      "into": "Politoed",
+      "method": "King's Rock"
+    }
+  ],
+  "Abra": [
+    {
+      "into": "Kadabra",
+      "method": "Level 16"
+    }
+  ],
+  "Kadabra": [
+    {
+      "into": "Alakazam",
+      "method": "Level 36"
+    }
+  ],
+  "Machop": [
+    {
+      "into": "Machoke",
+      "method": "Level 28"
+    }
+  ],
+  "Machoke": [
+    {
+      "into": "Machamp",
+      "method": "Level 36"
+    }
+  ],
+  "Bellsprout": [
+    {
+      "into": "Weepinbell",
+      "method": "Level 21"
+    }
+  ],
+  "Weepinbell": [
+    {
+      "into": "Victreebel",
+      "method": "Leaf Stone"
+    }
+  ],
+  "Tentacool": [
+    {
+      "into": "Tentacruel",
+      "method": "Level 30"
+    }
+  ],
+  "Geodude": [
+    {
+      "into": "Graveler",
+      "method": "Level 25"
+    }
+  ],
+  "Graveler": [
+    {
+      "into": "Golem",
+      "method": "Level 36"
+    }
+  ],
+  "Ponyta": [
+    {
+      "into": "Rapidash",
+      "method": "Level 35"
+    }
+  ],
+  "Slowpoke": [
+    {
+      "into": "Slowbro",
+      "method": "Level 33"
+    },
+    {
+      "into": "Slowking",
+      "method": "King's Rock"
+    }
+  ],
+  "Magnemite": [
+    {
+      "into": "Magneton",
+      "method": "Level 30"
+    }
+  ],
+  "Magneton": [
+    {
+      "into": "Magnezone",
+      "method": "Thunder Stone"
+    }
+  ],
+  "Doduo": [
+    {
+      "into": "Dodrio",
+      "method": "Level 31"
+    }
+  ],
+  "Seel": [
+    {
+      "into": "Dewgong",
+      "method": "Level 34"
+    }
+  ],
+  "Grimer": [
+    {
+      "into": "Muk",
+      "method": "Level 35"
+    }
+  ],
+  "Shellder": [
+    {
+      "into": "Cloyster",
+      "method": "Water Stone"
+    }
+  ],
+  "Gastly": [
+    {
+      "into": "Haunter",
+      "method": "Level 25"
+    }
+  ],
+  "Haunter": [
+    {
+      "into": "Gengar",
+      "method": "Level 36"
+    }
+  ],
+  "Onix": [
+    {
+      "into": "Steelix",
+      "method": "Metal Coat"
+    }
+  ],
+  "Drowzee": [
+    {
+      "into": "Hypno",
+      "method": "Level 26"
+    }
+  ],
+  "Krabby": [
+    {
+      "into": "Kingler",
+      "method": "Level 28"
+    }
+  ],
+  "Voltorb": [
+    {
+      "into": "Electrode",
+      "method": "Level 30"
+    }
+  ],
+  "Exeggcute": [
+    {
+      "into": "Exeggutor",
+      "method": "Leaf Stone"
+    }
+  ],
+  "Cubone": [
+    {
+      "into": "Marowak",
+      "method": "Level 28"
+    }
+  ],
+  "Lickitung": [
+    {
+      "into": "Lickilicky",
+      "method": "Know Rollout"
+    }
+  ],
+  "Rhyhorn": [
+    {
+      "into": "Rhydon",
+      "method": "Level 36"
+    }
+  ],
+  "Rhydon": [
+    {
+      "into": "Rhyperior",
+      "method": "Protector"
+    }
+  ],
+  "Chansey": [
+    {
+      "into": "Blissey",
+      "method": "Friendship"
+    }
+  ],
+  "Tangela": [
+    {
+      "into": "Tangrowth",
+      "method": "Know Ancient Power"
+    }
+  ],
+  "Horsea": [
+    {
+      "into": "Seadra",
+      "method": "Level 32"
+    }
+  ],
+  "Seadra": [
+    {
+      "into": "Kingdra",
+      "method": "Dragon Scale"
+    }
+  ],
+  "Goldeen": [
+    {
+      "into": "Seaking",
+      "method": "Level 33"
+    }
+  ],
+  "Staryu": [
+    {
+      "into": "Starmie",
+      "method": "Water Stone"
+    }
+  ],
+  "Scyther": [
+    {
+      "into": "Scizor",
+      "method": "Metal Coat"
+    }
+  ],
+  "Electabuzz": [
+    {
+      "into": "Electivire",
+      "method": "Electirizer"
+    }
+  ],
+  "Magmar": [
+    {
+      "into": "Magmortar",
+      "method": "Magmarizer"
+    }
+  ],
+  "Magikarp": [
+    {
+      "into": "Gyarados",
+      "method": "Level 20"
+    }
+  ],
+  "Eevee": [
+    {
+      "into": "Vaporeon",
+      "method": "Water Stone"
+    },
+    {
+      "into": "Jolteon",
+      "method": "Thunder Stone"
+    },
+    {
+      "into": "Flareon",
+      "method": "Fire Stone"
+    },
+    {
+      "into": "Espeon",
+      "method": "Sun Stone"
+    },
+    {
+      "into": "Umbreon",
+      "method": "Moon Stone"
+    },
+    {
+      "into": "Leafeon",
+      "method": "Leaf Stone"
+    },
+    {
+      "into": "Glaceon",
+      "method": "Ice Stone"
+    }
+  ],
+  "Porygon": [
+    {
+      "into": "Porygon2",
+      "method": "Up-Grade"
+    }
+  ],
+  "Omanyte": [
+    {
+      "into": "Omastar",
+      "method": "Level 30"
+    }
+  ],
+  "Kabuto": [
+    {
+      "into": "Kabutops",
+      "method": "Level 30"
+    }
+  ],
+  "Dratini": [
+    {
+      "into": "Dragonair",
+      "method": "Level 30"
+    }
+  ],
+  "Dragonair": [
+    {
+      "into": "Dragonite",
+      "method": "Level 55"
+    }
+  ],
+  "Sentret": [
+    {
+      "into": "Furret",
+      "method": "Level 15"
+    }
+  ],
+  "Hoothoot": [
+    {
+      "into": "Noctowl",
+      "method": "Level 20"
+    }
+  ],
+  "Ledyba": [
+    {
+      "into": "Ledian",
+      "method": "Level 18"
+    }
+  ],
+  "Spinarak": [
+    {
+      "into": "Ariados",
+      "method": "Level 22"
+    }
+  ],
+  "Chinchou": [
+    {
+      "into": "Lanturn",
+      "method": "Level 27"
+    }
+  ],
+  "Pichu": [
+    {
+      "into": "Pikachu",
+      "method": "Friendship"
+    }
+  ],
+  "Natu": [
+    {
+      "into": "Xatu",
+      "method": "Level 25"
+    }
+  ],
+  "Mareep": [
+    {
+      "into": "Flaaffy",
+      "method": "Level 15"
+    }
+  ],
+  "Flaaffy": [
+    {
+      "into": "Ampharos",
+      "method": "Level 30"
+    }
+  ],
+  "Hoppip": [
+    {
+      "into": "Skiploom",
+      "method": "Level 18"
+    }
+  ],
+  "Skiploom": [
+    {
+      "into": "Jumpluff",
+      "method": "Level 27"
+    }
+  ],
+  "Aipom": [
+    {
+      "into": "Ambipom",
+      "method": "Know Double Hit"
+    }
+  ],
+  "Sunkern": [
+    {
+      "into": "Sunflora",
+      "method": "Sun Stone"
+    }
+  ],
+  "Yanma": [
+    {
+      "into": "Yanmega",
+      "method": "Know Ancient Power"
+    }
+  ],
+  "Wooper": [
+    {
+      "into": "Quagsire",
+      "method": "Level 20"
+    }
+  ],
+  "Murkrow": [
+    {
+      "into": "Honchkrow",
+      "method": "Dusk Stone"
+    }
+  ],
+  "Misdreavus": [
+    {
+      "into": "Mismagius",
+      "method": "Dusk Stone"
+    }
+  ],
+  "Pineco": [
+    {
+      "into": "Forretress",
+      "method": "Level 31"
+    }
+  ],
+  "Gligar": [
+    {
+      "into": "Gliscor",
+      "method": "Level up holding Razor Fang, at night"
+    }
+  ],
+  "Sneasel": [
+    {
+      "into": "Weavile",
+      "method": "Level up holding Razor Claw, at night"
+    }
+  ],
+  "Teddiursa": [
+    {
+      "into": "Ursaring",
+      "method": "Level 30"
+    }
+  ],
+  "Slugma": [
+    {
+      "into": "Magcargo",
+      "method": "Level 32"
+    }
+  ],
+  "Swinub": [
+    {
+      "into": "Piloswine",
+      "method": "Level 33"
+    }
+  ],
+  "Piloswine": [
+    {
+      "into": "Mamoswine",
+      "method": "Know Ancient Power"
+    }
+  ],
+  "Remoraid": [
+    {
+      "into": "Octillery",
+      "method": "Level 25"
+    }
+  ],
+  "Houndour": [
+    {
+      "into": "Houndoom",
+      "method": "Level 24"
+    }
+  ],
+  "Phanpy": [
+    {
+      "into": "Donphan",
+      "method": "Level 25"
+    }
+  ],
+  "Porygon2": [
+    {
+      "into": "Porygon-Z",
+      "method": "Dubious Disc"
+    }
+  ],
+  "Smoochum": [
+    {
+      "into": "Jynx",
+      "method": "Level 30"
+    }
+  ],
+  "Elekid": [
+    {
+      "into": "Electabuzz",
+      "method": "Level 30"
+    }
+  ],
+  "Magby": [
+    {
+      "into": "Magmar",
+      "method": "Level 30"
+    }
+  ],
+  "Larvitar": [
+    {
+      "into": "Pupitar",
+      "method": "Level 30"
+    }
+  ],
+  "Pupitar": [
+    {
+      "into": "Tyranitar",
+      "method": "Level 55"
+    }
+  ],
+  "Poochyena": [
+    {
+      "into": "Mightyena",
+      "method": "Level 18"
+    }
+  ],
+  "Zigzagoon": [
+    {
+      "into": "Linoone",
+      "method": "Level 20"
+    }
+  ],
+  "Wurmple": [
+    {
+      "into": "Silcoon",
+      "method": "Level 7"
+    },
+    {
+      "into": "Cascoon",
+      "method": "Level 7"
+    }
+  ],
+  "Silcoon": [
+    {
+      "into": "Beautifly",
+      "method": "Level 10"
+    }
+  ],
+  "Cascoon": [
+    {
+      "into": "Dustox",
+      "method": "Level 10"
+    }
+  ],
+  "Lotad": [
+    {
+      "into": "Lombre",
+      "method": "Level 14"
+    }
+  ],
+  "Lombre": [
+    {
+      "into": "Ludicolo",
+      "method": "Water Stone"
+    }
+  ],
+  "Seedot": [
+    {
+      "into": "Nuzleaf",
+      "method": "Level 14"
+    }
+  ],
+  "Nuzleaf": [
+    {
+      "into": "Shiftry",
+      "method": "Leaf Stone"
+    }
+  ],
+  "Taillow": [
+    {
+      "into": "Swellow",
+      "method": "Level 22"
+    }
+  ],
+  "Surskit": [
+    {
+      "into": "Masquerain",
+      "method": "Level 22"
+    }
+  ],
+  "Shroomish": [
+    {
+      "into": "Breloom",
+      "method": "Level 23"
+    }
+  ],
+  "Slakoth": [
+    {
+      "into": "Vigoroth",
+      "method": "Level 18"
+    }
+  ],
+  "Vigoroth": [
+    {
+      "into": "Slaking",
+      "method": "Level 36"
+    }
+  ],
+  "Nincada": [
+    {
+      "into": "Ninjask",
+      "method": "Level 20"
+    },
+    {
+      "into": "Shedinja",
+      "method": "Level 20"
+    }
+  ],
+  "Whismur": [
+    {
+      "into": "Loudred",
+      "method": "Level 20"
+    }
+  ],
+  "Loudred": [
+    {
+      "into": "Exploud",
+      "method": "Level 40"
+    }
+  ],
+  "Makuhita": [
+    {
+      "into": "Hariyama",
+      "method": "Level 24"
+    }
+  ],
+  "Nosepass": [
+    {
+      "into": "Probopass",
+      "method": "Level up, near a special magnetic field"
+    }
+  ],
+  "Skitty": [
+    {
+      "into": "Delcatty",
+      "method": "Moon Stone"
+    }
+  ],
+  "Aron": [
+    {
+      "into": "Lairon",
+      "method": "Level 24"
+    }
+  ],
+  "Lairon": [
+    {
+      "into": "Aggron",
+      "method": "Level 40"
+    }
+  ],
+  "Meditite": [
+    {
+      "into": "Medicham",
+      "method": "Level 33"
+    }
+  ],
+  "Electrike": [
+    {
+      "into": "Manectric",
+      "method": "Level 26"
+    }
+  ],
+  "Roselia": [
+    {
+      "into": "Roserade",
+      "method": "Shiny Stone"
+    }
+  ],
+  "Gulpin": [
+    {
+      "into": "Swalot",
+      "method": "Level 26"
+    }
+  ],
+  "Carvanha": [
+    {
+      "into": "Sharpedo",
+      "method": "Level 30"
+    }
+  ],
+  "Wailmer": [
+    {
+      "into": "Wailord",
+      "method": "Level 36"
+    }
+  ],
+  "Numel": [
+    {
+      "into": "Camerupt",
+      "method": "Level 33"
+    }
+  ],
+  "Spoink": [
+    {
+      "into": "Grumpig",
+      "method": "Level 32"
+    }
+  ],
+  "Cacnea": [
+    {
+      "into": "Cacturne",
+      "method": "Level 32"
+    }
+  ],
+  "Swablu": [
+    {
+      "into": "Altaria",
+      "method": "Level 35"
+    }
+  ],
+  "Barboach": [
+    {
+      "into": "Whiscash",
+      "method": "Level 30"
+    }
+  ],
+  "Corphish": [
+    {
+      "into": "Crawdaunt",
+      "method": "Level 30"
+    }
+  ],
+  "Baltoy": [
+    {
+      "into": "Claydol",
+      "method": "Level 32"
+    }
+  ],
+  "Lileep": [
+    {
+      "into": "Cradily",
+      "method": "Level 30"
+    }
+  ],
+  "Anorith": [
+    {
+      "into": "Armaldo",
+      "method": "Level 30"
+    }
+  ],
+  "Shuppet": [
+    {
+      "into": "Banette",
+      "method": "Level 32"
+    }
+  ],
+  "Wynaut": [
+    {
+      "into": "Wobbuffet",
+      "method": "Level 15"
+    }
+  ],
+  "Snorunt": [
+    {
+      "into": "Glalie",
+      "method": "Level 32"
+    },
+    {
+      "into": "Froslass",
+      "method": "Dawn Stone"
+    }
+  ],
+  "Spheal": [
+    {
+      "into": "Sealeo",
+      "method": "Level 24"
+    }
+  ],
+  "Sealeo": [
+    {
+      "into": "Walrein",
+      "method": "Level 40"
+    }
+  ],
+  "Clamperl": [
+    {
+      "into": "Huntail",
+      "method": "Deep Sea Tooth"
+    },
+    {
+      "into": "Gorebyss",
+      "method": "Deep Sea Scale"
+    }
+  ],
+  "Bagon": [
+    {
+      "into": "Shelgon",
+      "method": "Level 30"
+    }
+  ],
+  "Shelgon": [
+    {
+      "into": "Salamence",
+      "method": "Level 50"
+    }
+  ],
+  "Beldum": [
+    {
+      "into": "Metang",
+      "method": "Level 20"
+    }
+  ],
+  "Metang": [
+    {
+      "into": "Metagross",
+      "method": "Level 45"
+    }
+  ],
+  "Staravia": [
+    {
+      "into": "Staraptor",
+      "method": "Level 34"
+    }
+  ],
+  "Bidoof": [
+    {
+      "into": "Bibarel",
+      "method": "Level 15"
+    }
+  ],
+  "Kricketot": [
+    {
+      "into": "Kricketune",
+      "method": "Level 10"
+    }
+  ],
+  "Shinx": [
+    {
+      "into": "Luxio",
+      "method": "Level 15"
+    }
+  ],
+  "Luxio": [
+    {
+      "into": "Luxray",
+      "method": "Level 30"
+    }
+  ],
+  "Budew": [
+    {
+      "into": "Roselia",
+      "method": "Friendship"
+    }
+  ],
+  "Cranidos": [
+    {
+      "into": "Rampardos",
+      "method": "Level 30"
+    }
+  ],
+  "Shieldon": [
+    {
+      "into": "Bastiodon",
+      "method": "Level 30"
+    }
+  ],
+  "Combee": [
+    {
+      "into": "Vespiquen",
+      "method": "Level 21"
+    }
+  ],
+  "Buizel": [
+    {
+      "into": "Floatzel",
+      "method": "Level 26"
+    }
+  ],
+  "Cherubi": [
+    {
+      "into": "Cherrim",
+      "method": "Level 25"
+    }
+  ],
+  "Shellos": [
+    {
+      "into": "Gastrodon",
+      "method": "Level 30"
+    }
+  ],
+  "Drifloon": [
+    {
+      "into": "Drifblim",
+      "method": "Level 28"
+    }
+  ],
+  "Buneary": [
+    {
+      "into": "Lopunny",
+      "method": "Friendship"
+    }
+  ],
+  "Glameow": [
+    {
+      "into": "Purugly",
+      "method": "Level 32"
+    }
+  ],
+  "Chingling": [
+    {
+      "into": "Chimecho",
+      "method": "Friendship"
+    }
+  ],
+  "Stunky": [
+    {
+      "into": "Skuntank",
+      "method": "Level 32"
+    }
+  ],
+  "Bronzor": [
+    {
+      "into": "Bronzong",
+      "method": "Level 33"
+    }
+  ],
+  "Bonsly": [
+    {
+      "into": "Sudowoodo",
+      "method": "Know Mimic"
+    }
+  ],
+  "Happiny": [
+    {
+      "into": "Chansey",
+      "method": "Level up holding Oval Stone, during the day"
+    }
+  ],
+  "Gible": [
+    {
+      "into": "Gabite",
+      "method": "Level 24"
+    }
+  ],
+  "Gabite": [
+    {
+      "into": "Garchomp",
+      "method": "Level 48"
+    }
+  ],
+  "Munchlax": [
+    {
+      "into": "Snorlax",
+      "method": "Friendship"
+    }
+  ],
+  "Riolu": [
+    {
+      "into": "Lucario",
+      "method": "Friendship"
+    }
+  ],
+  "Hippopotas": [
+    {
+      "into": "Hippowdon",
+      "method": "Level 34"
+    }
+  ],
+  "Skorupi": [
+    {
+      "into": "Drapion",
+      "method": "Level 30"
+    }
+  ],
+  "Croagunk": [
+    {
+      "into": "Toxicroak",
+      "method": "Level 33"
+    }
+  ],
+  "Finneon": [
+    {
+      "into": "Lumineon",
+      "method": "Level 31"
+    }
+  ],
+  "Mantyke": [
+    {
+      "into": "Mantine",
+      "method": "Level up, with a Remoraid in party"
+    }
+  ],
+  "Snover": [
+    {
+      "into": "Abomasnow",
+      "method": "Level 40"
+    }
+  ]
+}
