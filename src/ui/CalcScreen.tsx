@@ -130,6 +130,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     attackerTeam, attackerIndex, switchAttacker, addToAttackerParty, removeFromAttackerParty,
   } = useCalcStore()
   const boxSets = useBoxStore(s => s.sets)
+  const ownedTmMoves = useBoxStore(s => s.ownedTmMoves)
   const isYours = label === 'Yours'
   // The enemy card shows a party switcher when a whole trainer team is carried.
   const showParty = !isYours && defenderTeam.length > 1
@@ -675,6 +676,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         species={value?.species}
         currentMoves={value?.moves ?? []}
         level={value?.level}
+        ownedTmMoves={ownedTmMoves}
         title={chooser?.mode === 'replace' ? 'Swap move' : 'Add move'}
         onPick={m => {
           if (!chooser) return
@@ -689,6 +691,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         species={value?.species}
         currentMoves={value?.moves ?? []}
         monLevel={value?.level}
+        ownedTmMoves={ownedTmMoves}
         onAdd={addMove}
       />
     </div>
