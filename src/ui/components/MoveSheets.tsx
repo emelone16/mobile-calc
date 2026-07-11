@@ -40,6 +40,26 @@ function fmtAcc(acc?: number | true): string {
   return typeof acc === 'number' && acc > 0 ? `${acc}%` : '—'
 }
 
+/** Lowest level at which `species` learns each move by level-up. */
+function minLevelByMove(game: GameData, species?: string): Map<string, number> {
+  const data = species ? game.species[species] : undefined
+  const out = new Map<string, number>()
+  for (const [lvl, move] of data?.learnset ?? []) {
+    const cur = out.get(move)
+    if (cur === undefined || lvl < cur) out.set(move, lvl)
+  }
+  return out
+}
+
+/** Small greyed "🔒 Lv N" hint shown on a move that isn't learnable yet. */
+function LockHint({ level }: { level: number }) {
+  return (
+    <span className="muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+      🔒 Lv{level}
+    </span>
+  )
+}
+
 /** Compact inline summary — type badge + "BP · Acc" — used in move lists. */
 export function MoveSummary({ move }: { move?: MoveData }) {
   if (!move) return <span className="muted" style={{ fontSize: 12 }}>—</span>
@@ -167,6 +187,8 @@ export interface MoveChooserSheetProps {
   species?: string
   /** Moves already on the set — shown as ticked so you don't re-pick them. */
   currentMoves: string[]
+  /** The mon's level; level-up moves above it are greyed (still tappable). */
+  level?: number
   onPick(move: string): void
   title?: string
 }
@@ -187,12 +209,18 @@ function learnableMoves(game: GameData, species?: string): string[] {
 }
 
 export function MoveChooserSheet({
-  open, onClose, game, species, currentMoves, onPick, title,
+  open, onClose, game, species, currentMoves, level, onPick, title,
 }: MoveChooserSheetProps) {
   const [scope, setScope] = useState<'learn' | 'all'>('learn')
   const [query, setQuery] = useState('')
 
   const learnable = useMemo(() => learnableMoves(game, species), [game, species])
+  // A move reachable by TM is never level-locked; only pure level-up moves are.
+  const tmSet = useMemo(
+    () => new Set(species ? game.species[species]?.tms ?? [] : []),
+    [game, species],
+  )
+  const minLevel = useMemo(() => minLevelByMove(game, species), [game, species])
   const allNames = useMemo(() => Object.keys(game.moves), [game])
   const hasLearnable = learnable.length > 0
   const effectiveScope = hasLearnable ? scope : 'all'
@@ -245,10 +273,16 @@ export function MoveChooserSheet({
         )}
         {filtered.map(name => {
           const inSet = currentMoves.includes(name)
+          // Level-lock only applies in the learnable scope, and only to moves
+          // this species can't also pick up from a TM.
+          const req = minLevel.get(name)
+          const locked =
+            effectiveScope === 'learn' && !tmSet.has(name) &&
+            req !== undefined && level !== undefined && req > level
           return (
             <button
               key={name}
-              className="picker-row"
+              className={`picker-row ${locked ? 'picker-row--locked' : ''}`}
               onClick={() => { onPick(name); handleClose() }}
             >
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
@@ -256,6 +290,7 @@ export function MoveChooserSheet({
                   {name}
                 </span>
                 {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
+                {locked && req !== undefined && <LockHint level={req} />}
               </span>
               <MoveSummary move={game.moves[name]} />
             </button>
@@ -276,12 +311,14 @@ export interface LearnsetSheetProps {
   game: GameData
   species?: string
   currentMoves: string[]
+  /** The mon's level; level-up moves above it are greyed (still tappable). */
+  monLevel?: number
   /** When provided, tapping a move adds it to the set. */
   onAdd?(move: string): void
 }
 
 export function LearnsetSheet({
-  open, onClose, game, species, currentMoves, onAdd,
+  open, onClose, game, species, currentMoves, monLevel, onAdd,
 }: LearnsetSheetProps) {
   const [tab, setTab] = useState<'level' | 'tm'>('level')
   const [query, setQuery] = useState('')
@@ -347,6 +384,8 @@ export function LearnsetSheet({
         )}
         {rows.map(({ key, level, move }) => {
           const inSet = currentMoves.includes(move)
+          // Level-up moves the mon hasn't reached yet are greyed but tappable.
+          const locked = level !== undefined && monLevel !== undefined && level > monLevel
           const content = (
             <>
               <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
@@ -362,21 +401,23 @@ export function LearnsetSheet({
                   {move}
                 </span>
                 {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
+                {locked && !inSet && <span className="muted" style={{ fontSize: 12 }}>🔒</span>}
               </span>
               <MoveSummary move={game.moves[move]} />
             </>
           )
+          const cls = `picker-row ${locked ? 'picker-row--locked' : ''}`
           return onAdd ? (
             <button
               key={key}
-              className="picker-row"
+              className={cls}
               disabled={inSet}
               onClick={() => { onAdd(move); handleClose() }}
             >
               {content}
             </button>
           ) : (
-            <div key={key} className="picker-row" style={{ cursor: 'default' }}>
+            <div key={key} className={cls} style={{ cursor: 'default' }}>
               {content}
             </div>
           )

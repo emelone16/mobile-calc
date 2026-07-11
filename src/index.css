@@ -445,6 +445,18 @@ textarea {
   border-top: 1px solid var(--border);
 }
 
+/* A move that isn't learnable yet (level too low, or a TM/HM not in the bag).
+ * Dimmed to read as unavailable, but still tappable. */
+.picker-row--locked {
+  opacity: 0.45;
+}
+
+/* Rows disabled outright (already on the set) get the standard muted look. */
+.picker-row:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 .picker-group-header {
   padding: var(--sp-3) var(--sp-3) var(--sp-1);
   font-size: var(--fs-sm);

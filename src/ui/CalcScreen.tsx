@@ -674,6 +674,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         game={game}
         species={value?.species}
         currentMoves={value?.moves ?? []}
+        level={value?.level}
         title={chooser?.mode === 'replace' ? 'Swap move' : 'Add move'}
         onPick={m => {
           if (!chooser) return
@@ -687,6 +688,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         game={game}
         species={value?.species}
         currentMoves={value?.moves ?? []}
+        monLevel={value?.level}
         onAdd={addMove}
       />
     </div>
