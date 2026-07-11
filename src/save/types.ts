@@ -8,6 +8,13 @@ export interface SetState {
   ability: string
   item: string
   moves: string[]
+  /**
+   * The Pokémon's moves as originally loaded (from the save/box/trainer),
+   * captured before any in-calc edits. Move swaps are temporary overrides on top
+   * of this; "Reset moves" restores it. Absent only for sets that predate the
+   * feature, in which case the editor stamps it on load.
+   */
+  defaultMoves?: string[]
   ivs: StatsTable
   evs: Partial<StatsTable>
   /**
@@ -46,6 +53,12 @@ export interface SaveReader {
 }
 
 export interface MappedMon extends SetState {}
+
+/** Stamp `defaultMoves` from the current moves if absent (idempotent). Call when
+ *  a set is first loaded into the calc so its original moveset can be restored. */
+export function withDefaultMoves(s: SetState): SetState {
+  return s.defaultMoves ? s : { ...s, defaultMoves: [...s.moves] }
+}
 
 /** RawMon -> SetState using enum tables (vanilla gen-4 or hack override). */
 export function mapRawMon(raw: RawMon, enums: SaveEnums): SetState | null {
