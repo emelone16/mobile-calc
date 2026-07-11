@@ -1,6 +1,6 @@
 import type {
   SourceBundle, GameData, MechanicsProfile, SpeciesData, MoveData,
-  TrainerIndex, Trainer, TrainerSet, RawSet,
+  TrainerIndex, Trainer, TrainerSet, RawSet, EvolutionBundle,
 } from './types'
 import { mergePlatinumFormes } from './platinumFormes'
 import { knownLocationFor } from './knownTrainerLocations'
@@ -13,6 +13,7 @@ export function composeGameData(
   id: string,
   title: string,
   mechanics: MechanicsProfile,
+  evolutions?: EvolutionBundle,
 ): GameData {
   const species: Record<string, SpeciesData> = {}
   for (const [name, p] of Object.entries(src.poks)) {
@@ -42,6 +43,8 @@ export function composeGameData(
     mergePlatinumFormes(species, src.poks)
   }
 
+  if (evolutions) attachEvolutions(species, evolutions)
+
   const trainers = buildTrainerIndex(src.formatted_sets)
 
   const game: GameData = {
@@ -50,6 +53,28 @@ export function composeGameData(
     saveEnums: src.includes, // undefined for RP
   }
   return deepFreeze(game)
+}
+
+/**
+ * Attach forward evolutions to each species and synthesize the reverse
+ * (`preEvolutions`) links. Entries pointing at species the bundle doesn't ship
+ * are skipped so the two data sources can drift without breaking the loader.
+ */
+function attachEvolutions(
+  species: Record<string, SpeciesData>,
+  evolutions: EvolutionBundle,
+): void {
+  for (const [from, evos] of Object.entries(evolutions)) {
+    const source = species[from]
+    if (!source) continue
+    const valid = evos.filter(e => species[e.into])
+    if (valid.length === 0) continue
+    source.evolutions = valid
+    for (const { into, method } of valid) {
+      const target = species[into]!
+      ;(target.preEvolutions ??= []).push({ from, method })
+    }
+  }
 }
 
 /** Invert species-first source into a trainer-centric index. */

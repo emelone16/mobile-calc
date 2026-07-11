@@ -11,7 +11,7 @@ import {
 } from './components/MoveSheets'
 import { NATURES } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
-import type { StatKey, StatsTable, Trainer, TrainerSet, GameData } from '../data/types'
+import type { StatKey, StatsTable, Trainer, TrainerSet, GameData, SpeciesData } from '../data/types'
 import type { FieldState } from '../state/calcStore'
 import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 
@@ -85,6 +85,28 @@ function spriteUrl(species: string) {
 }
 function iconUrl(species: string) {
   return `https://img.pokemondb.net/sprites/gen4-dp/icon/${toSpriteName(species)}.png`
+}
+
+// Compact evolution summary shown under the species' type chips: where this
+// Pokémon comes from and what it evolves into, with the RP-specific method.
+function EvolutionLine({ species }: { species: SpeciesData }) {
+  const from = species.preEvolutions ?? []
+  const into = species.evolutions ?? []
+  if (from.length === 0 && into.length === 0) return null
+  return (
+    <div className="muted" style={{ fontSize: 12, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {from.length > 0 && (
+        <span>
+          ← {from.map(e => `${e.from} (${e.method})`).join(', ')}
+        </span>
+      )}
+      {into.length > 0 && (
+        <span>
+          → {into.map(e => `${e.into} (${e.method})`).join(', ')}
+        </span>
+      )}
+    </div>
+  )
 }
 
 export function CalcScreen() {
@@ -397,6 +419,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
               ))}
             </div>
           )}
+          {speciesData && <EvolutionLine species={speciesData} />}
           {!isYours && trainerName && (
             <span className="muted" style={{ fontSize: 12 }}>Trainer: {trainerName}</span>
           )}

@@ -24,6 +24,22 @@ export interface MechanicsProfile {
   }
 }
 
+/** A single forward evolution: this species -> `into`, via `method`. */
+export interface Evolution {
+  into: string
+  /** Human-readable RP method, e.g. "Level 16", "Water Stone", "Friendship". */
+  method: string
+}
+
+/** The reverse link, synthesized by the loader from the forward map. */
+export interface PreEvolution {
+  from: string
+  method: string
+}
+
+/** Forward evolution map keyed by species name (the companion data file). */
+export type EvolutionBundle = Record<string, Evolution[]>
+
 export interface SpeciesData {
   name: string
   baseStats: StatsTable
@@ -35,6 +51,10 @@ export interface SpeciesData {
   /** Synthesized formes (Rotom appliances, Cherrim-Sunshine, etc.). */
   forme?: string
   baseSpecies?: string
+  /** What this species evolves into (present only when it has evolutions). */
+  evolutions?: Evolution[]
+  /** What this species evolves from (reverse of another species' `evolutions`). */
+  preEvolutions?: PreEvolution[]
 }
 
 export interface MoveData {

@@ -45,6 +45,37 @@ describe('composed GameData', () => {
     expect(Object.isFrozen(game)).toBe(true)
     expect(Object.isFrozen(game.species)).toBe(true)
   })
+
+  it('attaches forward evolutions with RP methods', () => {
+    expect(game.species['Bulbasaur']?.evolutions).toEqual([
+      { into: 'Ivysaur', method: 'Level 16' },
+    ])
+    // RP replaces trade evolutions with held-item methods.
+    expect(game.species['Onix']?.evolutions).toEqual([
+      { into: 'Steelix', method: 'Metal Coat' },
+    ])
+    // Fully-evolved species carry no forward evolutions.
+    expect(game.species['Venusaur']?.evolutions).toBeUndefined()
+  })
+
+  it('keeps branching evolutions (Eevee -> all eeveelutions)', () => {
+    const eevee = game.species['Eevee']?.evolutions
+    expect(eevee?.length).toBe(7)
+    // RP moves Espeon/Umbreon onto stones.
+    expect(eevee).toContainEqual({ into: 'Espeon', method: 'Sun Stone' })
+    expect(eevee).toContainEqual({ into: 'Glaceon', method: 'Ice Stone' })
+  })
+
+  it('synthesizes reverse preEvolutions links', () => {
+    expect(game.species['Ivysaur']?.preEvolutions).toEqual([
+      { from: 'Bulbasaur', method: 'Level 16' },
+    ])
+    expect(game.species['Steelix']?.preEvolutions).toEqual([
+      { from: 'Onix', method: 'Metal Coat' },
+    ])
+    // Base-stage species have no pre-evolution.
+    expect(game.species['Bulbasaur']?.preEvolutions).toBeUndefined()
+  })
 })
 
 describe('multi-hack registry', () => {
