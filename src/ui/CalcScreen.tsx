@@ -3,7 +3,7 @@ import { useGameStore } from '../state/gameStore'
 import { useCalcStore } from '../state/calcStore'
 import { useBoxStore } from '../state/boxStore'
 import { predictSwitchIn } from '../engine/aiService'
-import { computeStats, applyBoost, runCalc } from '../engine/calcService'
+import { computeStats, applyBoost, runCalc, speedWeatherMultiplier } from '../engine/calcService'
 import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import { NATURES } from '../save/types'
@@ -465,9 +465,13 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
               <div className="stat-row">
                 {STAT_KEYS.map(k => {
                   const stage = k === 'hp' ? 0 : (value.boosts?.[k as BoostKey] ?? 0)
-                  const shown = stage !== 0 ? applyBoost(stats[k], stage) : stats[k]
+                  const boosted = stage !== 0 ? applyBoost(stats[k], stage) : stats[k]
+                  // Fold in weather Speed abilities (Swift Swim in rain, etc.) so
+                  // the headline Speed matches the value the damage engine uses.
+                  const speedMult = k === 'sp' ? speedWeatherMultiplier(game, value, field) : 1
+                  const shown = speedMult !== 1 ? Math.floor(boosted * speedMult) : boosted
                   const tone =
-                    stage > 0 ? 'var(--good)'
+                    stage > 0 || speedMult > 1 ? 'var(--good)'
                       : stage < 0 ? 'var(--danger)'
                         : natureEffect?.plus === k ? 'var(--good)'
                           : natureEffect?.minus === k ? 'var(--danger)'
@@ -481,6 +485,9 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                       <span style={{ fontWeight: 700, color: tone }}>{shown}{mark}</span>
                       {stage !== 0 && (
                         <span style={{ fontSize: 10, color: tone }}>{fmtStage(stage)}</span>
+                      )}
+                      {speedMult > 1 && stage === 0 && (
+                        <span style={{ fontSize: 10, color: tone }}>×{speedMult}</span>
                       )}
                     </div>
                   )

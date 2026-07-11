@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync, existsSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { loadRpFromDisk } from './helpers'
-import { runCalc } from '../src/engine/calcService'
+import { runCalc, computeStats, speedWeatherMultiplier } from '../src/engine/calcService'
 import type { SetState } from '../src/save/types'
 import type { FieldState } from '../src/state/calcStore'
 
@@ -58,6 +58,24 @@ describe('engine smoke', () => {
     const base = runCalc(game, atk, def, 'Earthquake', field)
     const boosted = runCalc(game, atk, { ...def, boosts: { df: 2 } }, 'Earthquake', field)
     expect(boosted.maxPct).toBeLessThan(base.maxPct)
+  })
+
+  it('doubles Speed for Swift Swim in the rain (and only then)', () => {
+    const game = loadRpFromDisk()
+    const swimmer = set({ species: 'Ludicolo', ability: 'Swift Swim', moves: ['Surf'] })
+    const speed = computeStats(game, swimmer).sp
+
+    const rain: FieldState = { ...field, weather: 'Rain' }
+    const sun: FieldState = { ...field, weather: 'Sun' }
+    expect(speedWeatherMultiplier(game, swimmer, rain)).toBe(2)
+    expect(speedWeatherMultiplier(game, swimmer, field)).toBe(1)   // no weather
+    expect(speedWeatherMultiplier(game, swimmer, sun)).toBe(1)     // wrong weather
+    // The engine already reflects the doubled Speed in speed-based damage.
+    expect(Math.floor(speed * speedWeatherMultiplier(game, swimmer, rain))).toBe(speed * 2)
+
+    // A different ability in rain gets no boost.
+    const other = set({ species: 'Ludicolo', ability: 'Rain Dish', moves: ['Surf'] })
+    expect(speedWeatherMultiplier(game, other, rain)).toBe(1)
   })
 })
 

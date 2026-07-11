@@ -45,6 +45,32 @@ export function applyBoost(stat: number, stage: number): number {
   return Math.floor((stat * num) / den)
 }
 
+/**
+ * Weather-triggered Speed abilities double the holder's Speed while the matching
+ * weather is up (e.g. Swift Swim in Rain). `computeStats`/`applyBoost` return the
+ * unmodified stat, so callers fold this in to show the true in-battle Speed — the
+ * same multiplier the damage engine already applies internally when it sees the
+ * ability + weather. Returns 1 when nothing applies.
+ *
+ * Sand Rush (gen 5+) and Slush Rush (gen 7+) are gated on the game's damage gen
+ * so they never fire on a hack that predates them.
+ */
+export function speedWeatherMultiplier(game: GameData, set: SetState, field: FieldState): number {
+  const ability = set.ability?.trim()
+  if (!ability || !field.weather) return 1
+  const gen = game.mechanics.damageGen
+  const pairs: Array<[string, string, number]> = [
+    ['Swift Swim', 'Rain', 3],
+    ['Chlorophyll', 'Sun', 3],
+    ['Sand Rush', 'Sand', 5],
+    ['Slush Rush', 'Hail', 7],
+  ]
+  for (const [ab, weather, minGen] of pairs) {
+    if (ability === ab && field.weather === weather && gen >= minGen) return 2
+  }
+  return 1
+}
+
 export function runCalc(
   game: GameData,
   attacker: SetState,
