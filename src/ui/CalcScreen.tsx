@@ -6,6 +6,9 @@ import { predictSwitchIn } from '../engine/aiService'
 import { computeStats, applyBoost, runCalc } from '../engine/calcService'
 import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
+import {
+  MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet,
+} from './components/MoveSheets'
 import { NATURES } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet } from '../data/types'
@@ -57,14 +60,6 @@ const NATURE_EFFECTS: Record<string, { plus: StatKey; minus: StatKey }> = {
   Calm: { plus: 'sd', minus: 'at' }, Gentle: { plus: 'sd', minus: 'df' },
   Sassy: { plus: 'sd', minus: 'sp' }, Careful: { plus: 'sd', minus: 'sa' },
 }
-const TYPE_COLORS: Record<string, string> = {
-  Normal: '#A8A878', Fire: '#F08030', Water: '#6890F0', Electric: '#F8D030',
-  Grass: '#78C850', Ice: '#98D8D8', Fighting: '#C03028', Poison: '#A040A0',
-  Ground: '#E0C068', Flying: '#A890F0', Psychic: '#F85888', Bug: '#A8B820',
-  Rock: '#B8A038', Ghost: '#705898', Dragon: '#7038F8', Dark: '#705848',
-  Steel: '#B8B8D0', Fairy: '#EE99AC',
-}
-
 function toSpriteName(species: string): string {
   return species.toLowerCase().replace(/[.''']/g, '').replace(/\s+/g, '-')
 }
@@ -145,7 +140,11 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const [showNaturePicker, setShowNaturePicker] = useState(false)
   const [showAbilityPicker, setShowAbilityPicker] = useState(false)
   const [showItemPicker, setShowItemPicker] = useState(false)
-  const [showMovePicker, setShowMovePicker] = useState(false)
+  // Which move slot's detail sheet is open (null = closed).
+  const [detailIndex, setDetailIndex] = useState<number | null>(null)
+  // Open move chooser: {mode:'add'} appends, {mode:'replace',index} swaps a slot.
+  const [chooser, setChooser] = useState<{ mode: 'add' } | { mode: 'replace'; index: number } | null>(null)
+  const [showLearnset, setShowLearnset] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showBoosts, setShowBoosts] = useState(false)
@@ -167,7 +166,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     }
     return labels
   }, [trainerGroups])
-  const moveNames = useMemo(() => Object.keys(game.moves), [game])
   const itemNames = useMemo(() => ['None', ...getAllItemNames(game)], [game])
   const speciesData = value ? game.species[value.species] : undefined
   const abilityOptions = speciesData ? Object.values(speciesData.abilities) : []
@@ -253,18 +251,26 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
     writeBoosts(next)
   }
 
-  function toggleMove(m: string) {
-    if (!value) return
-    const has = value.moves.includes(m)
-    let moves: string[]
-    if (has) {
-      moves = value.moves.filter(x => x !== m)
-    } else if (value.moves.length >= 4) {
-      moves = [...value.moves.slice(1), m]
-    } else {
-      moves = [...value.moves, m]
-    }
+  // Append a move; a duplicate is ignored, and a full set drops its oldest slot.
+  function addMove(m: string) {
+    if (!value || value.moves.includes(m)) return
+    const moves = value.moves.length >= 4 ? [...value.moves.slice(1), m] : [...value.moves, m]
     onChange({ ...value, moves })
+  }
+  // Swap the move in slot `i`. If the incoming move already sits in another
+  // slot, the two trade places so the set never holds a duplicate.
+  function replaceMoveAt(i: number, m: string) {
+    if (!value) return
+    const moves = [...value.moves]
+    const cur = moves[i]
+    const j = moves.indexOf(m)
+    if (j !== -1 && j !== i && cur !== undefined) moves[j] = cur
+    moves[i] = m
+    onChange({ ...value, moves })
+  }
+  function removeMoveAt(i: number) {
+    if (!value) return
+    onChange({ ...value, moves: value.moves.filter((_, idx) => idx !== i) })
   }
 
   return (
@@ -408,7 +414,13 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
 
           <div className="row--between">
             <div className="label" style={{ margin: 0 }}>Moves</div>
-            <button className="btn btn--sm" onClick={() => setShowMovePicker(true)}>Edit</button>
+            <button
+              className="btn btn--sm"
+              disabled={!speciesData}
+              onClick={() => setShowLearnset(true)}
+            >
+              Learnset
+            </button>
           </div>
           <div className="col" style={{ gap: 6 }}>
             {[0, 1, 2, 3].map(i => {
@@ -418,7 +430,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   <button
                     key={i}
                     className="move-row move-row--empty"
-                    onClick={() => setShowMovePicker(true)}
+                    onClick={() => setChooser({ mode: 'add' })}
                   >
                     + Add move
                   </button>
@@ -434,27 +446,28 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   : '—'
               const moveType = game.moves[m]?.type
               return (
-                <button
-                  key={i}
-                  className="move-row"
-                  onClick={() => toggleCritRow(i)}
-                >
-                  <span className="move-row__name">{m}</span>
-                  {moveType && (
-                    <span
-                      className="type-badge"
-                      style={{ background: TYPE_COLORS[moveType] ?? 'var(--surface-3)' }}
-                    >
-                      {moveType}
-                    </span>
-                  )}
-                  <span
-                    className="move-row__dmg"
-                    style={showCrit ? { color: 'var(--danger)' } : undefined}
+                <div key={i} className="move-row">
+                  <button
+                    className="move-row__tap"
+                    onClick={() => setDetailIndex(i)}
+                    aria-label={`Details for ${m}`}
                   >
-                    {showCrit && opponent ? 'crit ' : ''}{range}
-                  </span>
-                </button>
+                    <span className="move-row__name">{m}</span>
+                    <MoveTypeBadge type={moveType} />
+                  </button>
+                  <button
+                    className="move-row__dmg-btn"
+                    onClick={() => toggleCritRow(i)}
+                    aria-label={`Toggle crit damage for ${m}`}
+                  >
+                    <span
+                      className="move-row__dmg"
+                      style={showCrit ? { color: 'var(--danger)' } : undefined}
+                    >
+                      {showCrit && opponent ? 'crit ' : ''}{range}
+                    </span>
+                  </button>
+                </div>
               )
             })}
           </div>
@@ -646,13 +659,35 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
         onClose={() => setShowItemPicker(false)}
         title="Choose item"
       />
-      <SearchablePicker
-        open={showMovePicker}
-        items={moveNames}
-        getLabel={m => m}
-        onPick={toggleMove}
-        onClose={() => setShowMovePicker(false)}
-        title="Choose move"
+      <MoveDetailSheet
+        open={detailIndex !== null}
+        onClose={() => setDetailIndex(null)}
+        game={game}
+        moveName={detailIndex !== null ? value?.moves[detailIndex] : undefined}
+        damage={detailIndex !== null ? moveOutcomes[detailIndex] ?? null : null}
+        onReplace={detailIndex !== null ? () => setChooser({ mode: 'replace', index: detailIndex }) : undefined}
+        onRemove={detailIndex !== null ? () => removeMoveAt(detailIndex) : undefined}
+      />
+      <MoveChooserSheet
+        open={chooser !== null}
+        onClose={() => setChooser(null)}
+        game={game}
+        species={value?.species}
+        currentMoves={value?.moves ?? []}
+        title={chooser?.mode === 'replace' ? 'Swap move' : 'Add move'}
+        onPick={m => {
+          if (!chooser) return
+          if (chooser.mode === 'add') addMove(m)
+          else replaceMoveAt(chooser.index, m)
+        }}
+      />
+      <LearnsetSheet
+        open={showLearnset}
+        onClose={() => setShowLearnset(false)}
+        game={game}
+        species={value?.species}
+        currentMoves={value?.moves ?? []}
+        onAdd={addMove}
       />
     </div>
   )

@@ -1,0 +1,387 @@
+// Move-focused bottom sheets shared by the calc screen:
+//  - MoveDetailSheet: tap a move to see its power / accuracy / PP / etc.
+//  - MoveChooserSheet: pick a move to add or swap into a slot (learnable vs all).
+//  - LearnsetSheet:    browse a species' level-up moves and TMs.
+import { useMemo, useState } from 'react'
+import { BottomSheet } from './BottomSheet'
+import type { GameData, MoveData } from '../../data/types'
+import type { CalcOutcome } from '../../engine/calcService'
+
+export const TYPE_COLORS: Record<string, string> = {
+  Normal: '#A8A878', Fire: '#F08030', Water: '#6890F0', Electric: '#F8D030',
+  Grass: '#78C850', Ice: '#98D8D8', Fighting: '#C03028', Poison: '#A040A0',
+  Ground: '#E0C068', Flying: '#A890F0', Psychic: '#F85888', Bug: '#A8B820',
+  Rock: '#B8A038', Ghost: '#705898', Dragon: '#7038F8', Dark: '#705848',
+  Steel: '#B8B8D0', Fairy: '#EE99AC',
+}
+
+export function MoveTypeBadge({ type }: { type?: string }) {
+  if (!type) return null
+  return (
+    <span
+      className="type-badge"
+      style={{ background: TYPE_COLORS[type] ?? 'var(--surface-3)' }}
+    >
+      {type}
+    </span>
+  )
+}
+
+const CATEGORY_LABEL: Record<string, string> = {
+  Physical: 'Physical', Special: 'Special', Status: 'Status',
+}
+
+/** Base power as text; 0/undefined (status moves) render as an em dash. */
+function fmtPower(bp?: number): string {
+  return bp && bp > 0 ? String(bp) : '—'
+}
+/** Accuracy as text; 0/undefined/true (never-miss or N/A) render as an em dash. */
+function fmtAcc(acc?: number | true): string {
+  return typeof acc === 'number' && acc > 0 ? `${acc}%` : '—'
+}
+
+/** Compact inline summary — type badge + "BP · Acc" — used in move lists. */
+export function MoveSummary({ move }: { move?: MoveData }) {
+  if (!move) return <span className="muted" style={{ fontSize: 12 }}>—</span>
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <MoveTypeBadge type={move.type} />
+      <span className="muted" style={{ fontSize: 12, fontVariantNumeric: 'tabular-nums' }}>
+        {fmtPower(move.basePower)} BP · {fmtAcc(move.acc)}
+      </span>
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Move detail
+// ---------------------------------------------------------------------------
+
+export interface MoveDetailSheetProps {
+  open: boolean
+  onClose(): void
+  game: GameData
+  moveName?: string
+  /** Damage against the current opponent, if any, for both normal & crit. */
+  damage?: { normal: CalcOutcome | null; crit: CalcOutcome | null } | null
+  onReplace?(): void
+  onRemove?(): void
+}
+
+export function MoveDetailSheet({
+  open, onClose, game, moveName, damage, onReplace, onRemove,
+}: MoveDetailSheetProps) {
+  const move = moveName ? game.moves[moveName] : undefined
+  const priority = move?.priority ?? 0
+  const normal = damage?.normal
+  const crit = damage?.crit
+
+  return (
+    <BottomSheet open={open} title={moveName ?? 'Move'} onClose={onClose}>
+      {!move ? (
+        <div className="muted" style={{ padding: 12 }}>No data for this move.</div>
+      ) : (
+        <div className="col" style={{ gap: 12, padding: '4px 0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <MoveTypeBadge type={move.type} />
+            <span className="muted">{CATEGORY_LABEL[move.category] ?? move.category}</span>
+          </div>
+
+          <div className="stat-row">
+            <div className="stat-cell">
+              <span className="muted" style={{ fontSize: 11 }}>Power</span>
+              <span style={{ fontWeight: 700 }}>{fmtPower(move.basePower)}</span>
+            </div>
+            <div className="stat-cell">
+              <span className="muted" style={{ fontSize: 11 }}>Accuracy</span>
+              <span style={{ fontWeight: 700 }}>{fmtAcc(move.acc)}</span>
+            </div>
+            <div className="stat-cell">
+              <span className="muted" style={{ fontSize: 11 }}>PP</span>
+              <span style={{ fontWeight: 700 }}>{move.pp ?? '—'}</span>
+            </div>
+            <div className="stat-cell">
+              <span className="muted" style={{ fontSize: 11 }}>Priority</span>
+              <span style={{ fontWeight: 700 }}>{priority > 0 ? `+${priority}` : priority}</span>
+            </div>
+          </div>
+
+          {normal && (
+            <div className="col" style={{ gap: 4 }}>
+              <div className="label" style={{ margin: 0 }}>Vs current target</div>
+              <div className="row--between">
+                <span className="muted">Damage</span>
+                <span style={{ fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  {normal.maxPct > 0 ? `${normal.minPct}–${normal.maxPct}%` : 'No damage'}
+                </span>
+              </div>
+              {crit && crit.maxPct > 0 && (
+                <div className="row--between">
+                  <span className="muted">On crit</span>
+                  <span style={{ fontWeight: 700, color: 'var(--danger)', fontVariantNumeric: 'tabular-nums' }}>
+                    {crit.minPct}–{crit.maxPct}%
+                  </span>
+                </div>
+              )}
+              {normal.koText && (
+                <div className="muted" style={{ fontSize: 12 }}>{normal.koText}</div>
+              )}
+            </div>
+          )}
+
+          {(onReplace || onRemove) && (
+            <div style={{ display: 'flex', gap: 8 }}>
+              {onReplace && (
+                <button
+                  className="btn btn--block"
+                  onClick={() => { onReplace(); onClose() }}
+                >
+                  Swap move
+                </button>
+              )}
+              {onRemove && (
+                <button
+                  className="btn btn--danger btn--block"
+                  onClick={() => { onRemove(); onClose() }}
+                >
+                  Remove
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+    </BottomSheet>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Move chooser (add / swap)
+// ---------------------------------------------------------------------------
+
+export interface MoveChooserSheetProps {
+  open: boolean
+  onClose(): void
+  game: GameData
+  /** Species whose learnset scopes the "Learnable" filter. */
+  species?: string
+  /** Moves already on the set — shown as ticked so you don't re-pick them. */
+  currentMoves: string[]
+  onPick(move: string): void
+  title?: string
+}
+
+/** Union of a species' level-up moves and TMs, in a stable, de-duplicated order. */
+function learnableMoves(game: GameData, species?: string): string[] {
+  const data = species ? game.species[species] : undefined
+  if (!data) return []
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const [, move] of data.learnset) {
+    if (!seen.has(move)) { seen.add(move); out.push(move) }
+  }
+  for (const move of data.tms ?? []) {
+    if (!seen.has(move)) { seen.add(move); out.push(move) }
+  }
+  return out
+}
+
+export function MoveChooserSheet({
+  open, onClose, game, species, currentMoves, onPick, title,
+}: MoveChooserSheetProps) {
+  const [scope, setScope] = useState<'learn' | 'all'>('learn')
+  const [query, setQuery] = useState('')
+
+  const learnable = useMemo(() => learnableMoves(game, species), [game, species])
+  const allNames = useMemo(() => Object.keys(game.moves), [game])
+  const hasLearnable = learnable.length > 0
+  const effectiveScope = hasLearnable ? scope : 'all'
+
+  const base = effectiveScope === 'learn' ? learnable : allNames
+  const q = query.trim().toLowerCase()
+  const filtered = q ? base.filter(m => m.toLowerCase().includes(q)) : base
+
+  function handleClose() {
+    setQuery('')
+    onClose()
+  }
+
+  return (
+    <BottomSheet
+      open={open}
+      title={title ?? 'Choose move'}
+      onClose={handleClose}
+      pinned={
+        <div className="col" style={{ gap: 8 }}>
+          {hasLearnable && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                className={`chip ${effectiveScope === 'learn' ? 'chip--active' : ''}`}
+                onClick={() => setScope('learn')}
+              >
+                Learnable
+              </button>
+              <button
+                className={`chip ${effectiveScope === 'all' ? 'chip--active' : ''}`}
+                onClick={() => setScope('all')}
+              >
+                All moves
+              </button>
+            </div>
+          )}
+          <input
+            className="sheet-search"
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </div>
+      }
+    >
+      <div>
+        {filtered.length === 0 && (
+          <div className="muted" style={{ padding: 12 }}>No matches</div>
+        )}
+        {filtered.map(name => {
+          const inSet = currentMoves.includes(name)
+          return (
+            <button
+              key={name}
+              className="picker-row"
+              onClick={() => { onPick(name); handleClose() }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {name}
+                </span>
+                {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
+              </span>
+              <MoveSummary move={game.moves[name]} />
+            </button>
+          )
+        })}
+      </div>
+    </BottomSheet>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Learnset browser
+// ---------------------------------------------------------------------------
+
+export interface LearnsetSheetProps {
+  open: boolean
+  onClose(): void
+  game: GameData
+  species?: string
+  currentMoves: string[]
+  /** When provided, tapping a move adds it to the set. */
+  onAdd?(move: string): void
+}
+
+export function LearnsetSheet({
+  open, onClose, game, species, currentMoves, onAdd,
+}: LearnsetSheetProps) {
+  const [tab, setTab] = useState<'level' | 'tm'>('level')
+  const [query, setQuery] = useState('')
+  const data = species ? game.species[species] : undefined
+
+  const q = query.trim().toLowerCase()
+  const levelRows = useMemo(() => {
+    const rows = data?.learnset ?? []
+    return q ? rows.filter(([, m]) => m.toLowerCase().includes(q)) : rows
+  }, [data, q])
+  const tmRows = useMemo(() => {
+    const rows = data?.tms ?? []
+    return q ? rows.filter(m => m.toLowerCase().includes(q)) : rows
+  }, [data, q])
+
+  function handleClose() {
+    setQuery('')
+    onClose()
+  }
+
+  const rows: Array<{ key: string; level?: number; move: string }> =
+    tab === 'level'
+      ? levelRows.map(([lvl, m], i) => ({ key: `${m}-${lvl}-${i}`, level: lvl, move: m }))
+      : tmRows.map((m, i) => ({ key: `${m}-${i}`, move: m }))
+
+  return (
+    <BottomSheet
+      open={open}
+      title={species ? `${species} — learnset` : 'Learnset'}
+      onClose={handleClose}
+      pinned={
+        <div className="col" style={{ gap: 8 }}>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button
+              className={`chip ${tab === 'level' ? 'chip--active' : ''}`}
+              onClick={() => setTab('level')}
+            >
+              Level-up ({data?.learnset.length ?? 0})
+            </button>
+            <button
+              className={`chip ${tab === 'tm' ? 'chip--active' : ''}`}
+              onClick={() => setTab('tm')}
+            >
+              TMs ({data?.tms?.length ?? 0})
+            </button>
+          </div>
+          <input
+            className="sheet-search"
+            type="text"
+            placeholder="Search…"
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+          />
+        </div>
+      }
+    >
+      <div>
+        {!data && <div className="muted" style={{ padding: 12 }}>No species selected.</div>}
+        {data && rows.length === 0 && (
+          <div className="muted" style={{ padding: 12 }}>
+            {tab === 'tm' ? 'No TM moves.' : 'No level-up moves.'}
+          </div>
+        )}
+        {rows.map(({ key, level, move }) => {
+          const inSet = currentMoves.includes(move)
+          const content = (
+            <>
+              <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                {level !== undefined && (
+                  <span
+                    className="muted"
+                    style={{ fontVariantNumeric: 'tabular-nums', minWidth: 34, fontSize: 12 }}
+                  >
+                    Lv{level}
+                  </span>
+                )}
+                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {move}
+                </span>
+                {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
+              </span>
+              <MoveSummary move={game.moves[move]} />
+            </>
+          )
+          return onAdd ? (
+            <button
+              key={key}
+              className="picker-row"
+              disabled={inSet}
+              onClick={() => { onAdd(move); handleClose() }}
+            >
+              {content}
+            </button>
+          ) : (
+            <div key={key} className="picker-row" style={{ cursor: 'default' }}>
+              {content}
+            </div>
+          )
+        })}
+      </div>
+    </BottomSheet>
+  )
+}
