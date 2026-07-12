@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom'
-const tabs: Array<[string, string]> = [['/', 'Calc'], ['/box', 'Box'], ['/field', 'Field']]
+const tabs: Array<[string, string]> = [['/', 'Calc'], ['/box', 'Box'], ['/field', 'Field'], ['/encounters', 'Wild']]
 export function BottomNav() {
   return (
     <nav className="safe-bottom" style={navStyle}>

@@ -25,3 +25,23 @@ underpinning `@smogon/calc`) with Renegade Platinum's documented overrides
 applied — trade evolutions become held-item methods, adjusted levels, and
 happiness/eeveelution method changes. Derived from professorxavi/renplatdex's
 `gen-evolutions.mjs`.
+
+## Wild encounters (companion file)
+
+`renegade-platinum-encounters.json` is an OPTIONAL overlay the loader attaches
+to `GameData.encounters` (the main bundle carries no wild-encounter data). It is
+an ARRAY of locations in game-progression order:
+
+  [ { "name": "<Location>",
+      "encounters": {
+        "<method>": [ { "pokemon": "<Species>", "rate": <percent|null>, "levels": [min, max] } ]
+      } } ]
+
+Methods: `morning`, `day`, `night`, `pokeradar`, `honeytree`, `surf`, `oldrod`,
+`goodrod`, `superrod`, `gift`, `special`. `rate` is an encounter percentage, or
+`null` for fixed gift/special slots. `levels` is `[min, max]` (equal for
+fixed-level slots such as fishing).
+
+Source: Renegade Platinum's own `WildPokemon.txt` documentation (bundled with the
+ROM patches), via professorxavi/renplatdex's `locations.json`. The `"-"` rate
+placeholder from that file is normalized to `null` here.

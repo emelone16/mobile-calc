@@ -535,6 +535,87 @@ textarea {
   margin: var(--sp-3) 0;
 }
 
+/* ---------------------------------------------------------------------------
+ * Wild-encounter detail — dense tables/rows in the location sheet
+ * ------------------------------------------------------------------------- */
+
+/* Grass table: one row per species, a rate column per time of day. */
+.enc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-sm);
+}
+.enc-table th,
+.enc-table td {
+  padding: var(--sp-1) var(--sp-2);
+  text-align: center;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.enc-table thead th {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.enc-table tbody tr {
+  border-top: 1px solid var(--border);
+}
+.enc-table .enc-name {
+  text-align: left;
+  width: 100%;
+}
+.enc-name-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-weight: 600;
+}
+.enc-lv {
+  color: var(--text-dim);
+}
+.enc-rate--none {
+  color: var(--muted);
+  opacity: 0.4;
+}
+
+/* Compact single-line row for the non-grass methods (surf, rods, gift…). */
+.enc-row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-2) 0;
+  border-top: 1px solid var(--border);
+  font-size: var(--fs-sm);
+}
+.enc-row:first-child {
+  border-top: none;
+}
+.enc-row__name {
+  font-weight: 600;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.enc-row__lv {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+}
+.enc-row__rate {
+  color: var(--text-dim);
+  font-variant-numeric: tabular-nums;
+  min-width: 40px;
+  text-align: right;
+}
+
+/* Method sub-heading inside the sheet. */
+.enc-section + .enc-section {
+  margin-top: var(--sp-4);
+}
+
 .section-header {
   display: flex;
   align-items: center;

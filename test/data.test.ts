@@ -91,6 +91,36 @@ describe('composed GameData', () => {
   })
 })
 
+describe('wild encounters', () => {
+  const game = loadRpFromDisk()
+
+  it('attaches the wild-encounter table in game order', () => {
+    expect(game.mechanics.features.encounters).toBe(true)
+    expect(game.encounters?.length).toBe(100)
+    // Game-progression order is preserved from the source file.
+    expect(game.encounters?.[0]?.name).toBe('Twinleaf Town')
+    expect(game.encounters?.[1]?.name).toBe('Route 201')
+  })
+
+  it('carries typed slots (species, rate, level range) per method', () => {
+    const route201 = game.encounters?.find(l => l.name === 'Route 201')
+    expect(route201).toBeDefined()
+    const starly = route201!.encounters.morning?.find(e => e.pokemon === 'Starly')
+    expect(starly).toEqual({ pokemon: 'Starly', rate: 30, levels: [4, 5] })
+  })
+
+  it('represents fixed gift slots with a null rate', () => {
+    const twinleaf = game.encounters?.find(l => l.name === 'Twinleaf Town')
+    const eevee = twinleaf!.encounters.gift?.find(e => e.pokemon === 'Eevee')
+    expect(eevee?.rate).toBeNull()
+  })
+
+  it('freezes the encounter table with the rest of the data layer', () => {
+    expect(Object.isFrozen(game.encounters)).toBe(true)
+    expect(Object.isFrozen(game.encounters?.[0])).toBe(true)
+  })
+})
+
 describe('evolution family', () => {
   const game = loadRpFromDisk()
 

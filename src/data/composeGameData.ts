@@ -1,6 +1,6 @@
 import type {
   SourceBundle, GameData, MechanicsProfile, SpeciesData, MoveData,
-  TrainerIndex, Trainer, TrainerSet, RawSet, EvolutionBundle,
+  TrainerIndex, Trainer, TrainerSet, RawSet, EvolutionBundle, EncounterBundle,
 } from './types'
 import { mergePlatinumFormes } from './platinumFormes'
 import { knownLocationFor } from './knownTrainerLocations'
@@ -14,6 +14,7 @@ export function composeGameData(
   title: string,
   mechanics: MechanicsProfile,
   evolutions?: EvolutionBundle,
+  encounters?: EncounterBundle,
 ): GameData {
   const species: Record<string, SpeciesData> = {}
   for (const [name, p] of Object.entries(src.poks)) {
@@ -50,6 +51,7 @@ export function composeGameData(
   const game: GameData = {
     id, title, mechanics, species, moves, trainers,
     moveReplacements: src.move_replacements ?? {},
+    encounters, // undefined when the hack ships no wild-encounter table
     saveEnums: src.includes, // undefined for RP
   }
   return deepFreeze(game)
