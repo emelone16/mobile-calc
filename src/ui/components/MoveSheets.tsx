@@ -1,10 +1,8 @@
 // Move-focused bottom sheets shared by the calc screen:
 //  - MoveDetailSheet: tap a move to see its power / accuracy / PP / etc.
 //  - MoveChooserSheet: pick a move to add or swap into a slot (learnable vs all).
-//  - LearnsetSheet:    browse a species' level-up moves and TMs.
-//  - EvolutionLearnsetSheet: compare level-up/TM learnsets across an evo line.
-// The two learnset sheets share their tab + search chrome via useMoveFilter /
-// MoveFilterBar so they stay in lockstep.
+//  - LearnsetSheet:    browse a species' level-up moves and TMs, with a toggle
+//                      to compare the whole evolution line's learnsets.
 import { useMemo, useState, type ReactNode } from 'react'
 import { BottomSheet } from './BottomSheet'
 import { buildEvolutionFamily } from '../../data/evolutionFamily'
@@ -439,38 +437,69 @@ function MoveFilterBar({
 }
 
 // ---------------------------------------------------------------------------
-// Evolution-line learnset comparison
+// Learnset browser (single mon + evolution-line comparison)
 // ---------------------------------------------------------------------------
 
-export interface EvolutionLearnsetSheetProps {
+export interface LearnsetSheetProps {
   open: boolean
   onClose(): void
   game: GameData
-  /** The mon whose evolution family is compared; its column is highlighted. */
   species?: string
+  currentMoves: string[]
+  /** The mon's level; level-up moves above it are greyed (still tappable). */
+  monLevel?: number
+  /** Moves the player owns a TM/HM for; null = unknown (no save imported). */
+  ownedTmMoves?: string[] | null
+  /** When provided, tapping a move adds it to the set. */
+  onAdd?(move: string): void
 }
 
 /**
- * Side-by-side learnsets for every stage in a species' evolution family, so you
- * can see at a glance which moves each stage gets (and at what level) — e.g. a
- * move the fully-evolved form learns that the base stage never does.
+ * Browse a species' learnset in two views, switched by a toggle:
+ *  - "This mon": the level-up / TM list, tap-to-add when `onAdd` is given.
+ *  - "Evolution line": side-by-side learnsets for every stage in the family, so
+ *    you can spot a move a later stage learns that the base never does.
+ * The evolution view is offered only when the mon actually has an evo line; the
+ * level/TM tab and search box (MoveFilterBar) are shared across both views.
  */
-export function EvolutionLearnsetSheet({ open, onClose, game, species }: EvolutionLearnsetSheetProps) {
+export function LearnsetSheet({
+  open, onClose, game, species, currentMoves, monLevel, ownedTmMoves, onAdd,
+}: LearnsetSheetProps) {
+  const [view, setView] = useState<'mon' | 'line'>('mon')
   const { tab, setTab, query, setQuery, resetQuery } = useMoveFilter()
+  const data = species ? game.species[species] : undefined
 
   const family = useMemo(
     () => (species ? buildEvolutionFamily(game, species) : []),
     [game, species],
   )
-  // Per-stage lookups, aligned by index with `family`.
+  const hasLine = family.length > 1
+  // With no evo line there is nothing to compare, so pin to the single-mon view.
+  const activeView = hasLine ? view : 'mon'
+
+  const q = query.trim().toLowerCase()
+
+  // --- "This mon" rows ---
+  const levelRows = useMemo(() => {
+    const rows = data?.learnset ?? []
+    return q ? rows.filter(([, m]) => m.toLowerCase().includes(q)) : rows
+  }, [data, q])
+  const tmRows = useMemo(() => {
+    const rows = data?.tms ?? []
+    return q ? rows.filter(m => m.toLowerCase().includes(q)) : rows
+  }, [data, q])
+  const monRows: Array<{ key: string; level?: number; move: string }> =
+    tab === 'level'
+      ? levelRows.map(([lvl, m], i) => ({ key: `${m}-${lvl}-${i}`, level: lvl, move: m }))
+      : tmRows.map((m, i) => ({ key: `${m}-${i}`, move: m }))
+
+  // --- "Evolution line" comparison, keyed by stage index into `family` ---
   const levelMaps = useMemo(() => family.map(s => minLevelByMove(game, s)), [game, family])
   const tmSets = useMemo(
     () => family.map(s => new Set(game.species[s]?.tms ?? [])),
     [game, family],
   )
-
-  const moves = useMemo(() => {
-    const q = query.trim().toLowerCase()
+  const lineMoves = useMemo(() => {
     if (tab === 'level') {
       // Union of level-up moves, sorted by the earliest level any stage learns.
       const minAcross = new Map<string, number>()
@@ -491,12 +520,7 @@ export function EvolutionLearnsetSheet({ open, onClose, game, species }: Evoluti
     if (q) rows = rows.filter(m => m.toLowerCase().includes(q))
     rows.sort((a, b) => a.localeCompare(b))
     return rows
-  }, [tab, query, levelMaps, tmSets])
-
-  function handleClose() {
-    resetQuery()
-    onClose()
-  }
+  }, [tab, q, levelMaps, tmSets])
 
   function cellFor(i: number, move: string): string {
     if (tab === 'level') {
@@ -506,111 +530,11 @@ export function EvolutionLearnsetSheet({ open, onClose, game, species }: Evoluti
     return tmSets[i]!.has(move) ? '✓' : '·'
   }
 
-  return (
-    <BottomSheet
-      open={open}
-      title={species ? `${species} — evolution learnsets` : 'Evolution learnsets'}
-      onClose={handleClose}
-      pinned={
-        <MoveFilterBar
-          tab={tab}
-          onTab={setTab}
-          query={query}
-          onQuery={setQuery}
-          levelLabel="Level-up"
-          tmLabel="TMs"
-          legend={
-            <div className="muted" style={{ fontSize: 12 }}>
-              {tab === 'level' ? 'Numbers = level learned' : '✓ = learns via TM'} · · = not learned
-            </div>
-          }
-        />
-      }
-    >
-      {family.length <= 1 ? (
-        <div className="muted" style={{ padding: 12 }}>
-          This Pokémon has no evolution line to compare.
-        </div>
-      ) : moves.length === 0 ? (
-        <div className="muted" style={{ padding: 12 }}>No matches</div>
-      ) : (
-        <div style={{ overflowX: 'auto' }}>
-          <table className="evo-table">
-            <thead>
-              <tr>
-                <th className="evo-move">Move</th>
-                {family.map(s => (
-                  <th key={s} className={s === species ? 'evo-col--current' : undefined}>{s}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {moves.map(move => (
-                <tr key={move}>
-                  <td className="evo-move">{move}</td>
-                  {family.map((s, i) => {
-                    const cell = cellFor(i, move)
-                    const current = s === species
-                    const none = cell === '·'
-                    const cls = [
-                      current ? 'evo-col--current' : '',
-                      none ? 'evo-cell--none' : '',
-                    ].filter(Boolean).join(' ')
-                    return <td key={s} className={cls || undefined}>{cell}</td>
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </BottomSheet>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Learnset browser
-// ---------------------------------------------------------------------------
-
-export interface LearnsetSheetProps {
-  open: boolean
-  onClose(): void
-  game: GameData
-  species?: string
-  currentMoves: string[]
-  /** The mon's level; level-up moves above it are greyed (still tappable). */
-  monLevel?: number
-  /** Moves the player owns a TM/HM for; null = unknown (no save imported). */
-  ownedTmMoves?: string[] | null
-  /** When provided, tapping a move adds it to the set. */
-  onAdd?(move: string): void
-}
-
-export function LearnsetSheet({
-  open, onClose, game, species, currentMoves, monLevel, ownedTmMoves, onAdd,
-}: LearnsetSheetProps) {
-  const { tab, setTab, query, setQuery, resetQuery } = useMoveFilter()
-  const data = species ? game.species[species] : undefined
-
-  const q = query.trim().toLowerCase()
-  const levelRows = useMemo(() => {
-    const rows = data?.learnset ?? []
-    return q ? rows.filter(([, m]) => m.toLowerCase().includes(q)) : rows
-  }, [data, q])
-  const tmRows = useMemo(() => {
-    const rows = data?.tms ?? []
-    return q ? rows.filter(m => m.toLowerCase().includes(q)) : rows
-  }, [data, q])
-
   function handleClose() {
     resetQuery()
+    setView('mon')
     onClose()
   }
-
-  const rows: Array<{ key: string; level?: number; move: string }> =
-    tab === 'level'
-      ? levelRows.map(([lvl, m], i) => ({ key: `${m}-${lvl}-${i}`, level: lvl, move: m }))
-      : tmRows.map((m, i) => ({ key: `${m}-${i}`, move: m }))
 
   return (
     <BottomSheet
@@ -618,71 +542,130 @@ export function LearnsetSheet({
       title={species ? `${species} — learnset` : 'Learnset'}
       onClose={handleClose}
       pinned={
-        <MoveFilterBar
-          tab={tab}
-          onTab={setTab}
-          query={query}
-          onQuery={setQuery}
-          levelLabel={`Level-up (${data?.learnset.length ?? 0})`}
-          tmLabel={`TMs (${data?.tms?.length ?? 0})`}
-        />
+        <div className="col" style={{ gap: 8 }}>
+          {hasLine && (
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button
+                className={`chip ${activeView === 'mon' ? 'chip--active' : ''}`}
+                onClick={() => setView('mon')}
+              >
+                This mon
+              </button>
+              <button
+                className={`chip ${activeView === 'line' ? 'chip--active' : ''}`}
+                onClick={() => setView('line')}
+              >
+                ⇋ Evolution line
+              </button>
+            </div>
+          )}
+          <MoveFilterBar
+            tab={tab}
+            onTab={setTab}
+            query={query}
+            onQuery={setQuery}
+            levelLabel={activeView === 'line' ? 'Level-up' : `Level-up (${data?.learnset.length ?? 0})`}
+            tmLabel={activeView === 'line' ? 'TMs' : `TMs (${data?.tms?.length ?? 0})`}
+            legend={activeView === 'line' ? (
+              <div className="muted" style={{ fontSize: 12 }}>
+                {tab === 'level' ? 'Numbers = level learned' : '✓ = learns via TM'} · · = not learned
+              </div>
+            ) : undefined}
+          />
+        </div>
       }
     >
-      <div>
-        {!data && <div className="muted" style={{ padding: 12 }}>No species selected.</div>}
-        {data && rows.length === 0 && (
-          <div className="muted" style={{ padding: 12 }}>
-            {tab === 'tm' ? 'No TM moves.' : 'No level-up moves.'}
+      {activeView === 'line' ? (
+        lineMoves.length === 0 ? (
+          <div className="muted" style={{ padding: 12 }}>No matches</div>
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table className="evo-table">
+              <thead>
+                <tr>
+                  <th className="evo-move">Move</th>
+                  {family.map(s => (
+                    <th key={s} className={s === species ? 'evo-col--current' : undefined}>{s}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {lineMoves.map(move => (
+                  <tr key={move}>
+                    <td className="evo-move">{move}</td>
+                    {family.map((s, i) => {
+                      const cell = cellFor(i, move)
+                      const current = s === species
+                      const none = cell === '·'
+                      const cls = [
+                        current ? 'evo-col--current' : '',
+                        none ? 'evo-cell--none' : '',
+                      ].filter(Boolean).join(' ')
+                      return <td key={s} className={cls || undefined}>{cell}</td>
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        )}
-        {rows.map(({ key, level, move }) => {
-          const inSet = currentMoves.includes(move)
-          // Level-up tab: greyed if the mon hasn't reached the level yet.
-          // TM tab: greyed if the bag is known and lacks this TM/HM.
-          const locked = tab === 'level'
-            ? (level !== undefined && monLevel !== undefined && level > monLevel)
-            : (ownedTmMoves != null && !ownedTmMoves.includes(move))
-          const content = (
-            <>
-              <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
-                {level !== undefined && (
-                  <span
-                    className="muted"
-                    style={{ fontVariantNumeric: 'tabular-nums', minWidth: 34, fontSize: 12 }}
-                  >
-                    Lv{level}
-                  </span>
-                )}
-                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {move}
-                </span>
-                {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
-                {locked && !inSet && (
-                  <span className="muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
-                    {tab === 'tm' ? '🔒 No TM' : '🔒'}
-                  </span>
-                )}
-              </span>
-              <MoveSummary move={game.moves[move]} />
-            </>
-          )
-          const cls = `picker-row ${locked ? 'picker-row--locked' : ''}`
-          return onAdd ? (
-            <button
-              key={key}
-              className={cls}
-              disabled={inSet}
-              onClick={() => { onAdd(move); handleClose() }}
-            >
-              {content}
-            </button>
-          ) : (
-            <div key={key} className={cls} style={{ cursor: 'default' }}>
-              {content}
+        )
+      ) : (
+        <div>
+          {!data && <div className="muted" style={{ padding: 12 }}>No species selected.</div>}
+          {data && monRows.length === 0 && (
+            <div className="muted" style={{ padding: 12 }}>
+              {tab === 'tm' ? 'No TM moves.' : 'No level-up moves.'}
             </div>
-          )
-        })}
-      </div>
+          )}
+          {monRows.map(({ key, level, move }) => {
+            const inSet = currentMoves.includes(move)
+            // Level-up tab: greyed if the mon hasn't reached the level yet.
+            // TM tab: greyed if the bag is known and lacks this TM/HM.
+            const locked = tab === 'level'
+              ? (level !== undefined && monLevel !== undefined && level > monLevel)
+              : (ownedTmMoves != null && !ownedTmMoves.includes(move))
+            const content = (
+              <>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 0 }}>
+                  {level !== undefined && (
+                    <span
+                      className="muted"
+                      style={{ fontVariantNumeric: 'tabular-nums', minWidth: 34, fontSize: 12 }}
+                    >
+                      Lv{level}
+                    </span>
+                  )}
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {move}
+                  </span>
+                  {inSet && <span className="muted" style={{ fontSize: 12 }}>✓</span>}
+                  {locked && !inSet && (
+                    <span className="muted" style={{ fontSize: 12, whiteSpace: 'nowrap' }}>
+                      {tab === 'tm' ? '🔒 No TM' : '🔒'}
+                    </span>
+                  )}
+                </span>
+                <MoveSummary move={game.moves[move]} />
+              </>
+            )
+            const cls = `picker-row ${locked ? 'picker-row--locked' : ''}`
+            return onAdd ? (
+              <button
+                key={key}
+                className={cls}
+                disabled={inSet}
+                onClick={() => { onAdd(move); handleClose() }}
+              >
+                {content}
+              </button>
+            ) : (
+              <div key={key} className={cls} style={{ cursor: 'default' }}>
+                {content}
+              </div>
+            )
+          })}
+        </div>
+      )}
     </BottomSheet>
   )
 }
