@@ -6,7 +6,7 @@ import { useCalcStore } from '../state/calcStore'
 import { BottomSheet } from './components/BottomSheet'
 import { parseSets } from '../import/moveReplacements'
 import { importSave } from '../save/saveService'
-import { withDefaultMoves, type SetState } from '../save/types'
+import { withDefaults, type SetState } from '../save/types'
 
 function toSpriteName(species: string): string {
   return species.toLowerCase().replace(/[.''']/g, '').replace(/\s+/g, '-')
@@ -129,7 +129,7 @@ export function BoxScreen() {
             key={i}
             className="card row--between"
             style={{ cursor: 'pointer', textAlign: 'left' }}
-            onClick={() => { setAttacker(withDefaultMoves(s)); navigate('/') }}
+            onClick={() => { setAttacker(withDefaults(s)); navigate('/') }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
               <img

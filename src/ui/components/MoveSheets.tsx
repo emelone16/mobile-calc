@@ -2,7 +2,10 @@
 //  - MoveDetailSheet: tap a move to see its power / accuracy / PP / etc.
 //  - MoveChooserSheet: pick a move to add or swap into a slot (learnable vs all).
 //  - LearnsetSheet:    browse a species' level-up moves and TMs.
-import { useMemo, useState } from 'react'
+//  - EvolutionLearnsetSheet: compare level-up/TM learnsets across an evo line.
+// The two learnset sheets share their tab + search chrome via useMoveFilter /
+// MoveFilterBar so they stay in lockstep.
+import { useMemo, useState, type ReactNode } from 'react'
 import { BottomSheet } from './BottomSheet'
 import { buildEvolutionFamily } from '../../data/evolutionFamily'
 import type { GameData, MoveData } from '../../data/types'
@@ -380,6 +383,62 @@ export function MoveChooserSheet({
 }
 
 // ---------------------------------------------------------------------------
+// Shared learnset chrome (level/TM tabs + search)
+// ---------------------------------------------------------------------------
+
+/** The level-up / TM tab plus the search box, as used by both learnset sheets.
+ *  Keeping it in one hook + component keeps the two sheets visually identical. */
+function useMoveFilter() {
+  const [tab, setTab] = useState<'level' | 'tm'>('level')
+  const [query, setQuery] = useState('')
+  return { tab, setTab, query, setQuery, resetQuery: () => setQuery('') }
+}
+
+interface MoveFilterBarProps {
+  tab: 'level' | 'tm'
+  onTab(tab: 'level' | 'tm'): void
+  query: string
+  onQuery(query: string): void
+  /** Tab captions — sheets pass counts here, e.g. "Level-up (24)". */
+  levelLabel: string
+  tmLabel: string
+  placeholder?: string
+  /** Optional legend/hint rendered under the search box. */
+  legend?: ReactNode
+}
+
+function MoveFilterBar({
+  tab, onTab, query, onQuery, levelLabel, tmLabel, placeholder = 'Search…', legend,
+}: MoveFilterBarProps) {
+  return (
+    <div className="col" style={{ gap: 8 }}>
+      <div style={{ display: 'flex', gap: 6 }}>
+        <button
+          className={`chip ${tab === 'level' ? 'chip--active' : ''}`}
+          onClick={() => onTab('level')}
+        >
+          {levelLabel}
+        </button>
+        <button
+          className={`chip ${tab === 'tm' ? 'chip--active' : ''}`}
+          onClick={() => onTab('tm')}
+        >
+          {tmLabel}
+        </button>
+      </div>
+      <input
+        className="sheet-search"
+        type="text"
+        placeholder={placeholder}
+        value={query}
+        onChange={e => onQuery(e.target.value)}
+      />
+      {legend}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Evolution-line learnset comparison
 // ---------------------------------------------------------------------------
 
@@ -397,8 +456,7 @@ export interface EvolutionLearnsetSheetProps {
  * move the fully-evolved form learns that the base stage never does.
  */
 export function EvolutionLearnsetSheet({ open, onClose, game, species }: EvolutionLearnsetSheetProps) {
-  const [tab, setTab] = useState<'level' | 'tm'>('level')
-  const [query, setQuery] = useState('')
+  const { tab, setTab, query, setQuery, resetQuery } = useMoveFilter()
 
   const family = useMemo(
     () => (species ? buildEvolutionFamily(game, species) : []),
@@ -436,7 +494,7 @@ export function EvolutionLearnsetSheet({ open, onClose, game, species }: Evoluti
   }, [tab, query, levelMaps, tmSets])
 
   function handleClose() {
-    setQuery('')
+    resetQuery()
     onClose()
   }
 
@@ -454,32 +512,19 @@ export function EvolutionLearnsetSheet({ open, onClose, game, species }: Evoluti
       title={species ? `${species} — evolution learnsets` : 'Evolution learnsets'}
       onClose={handleClose}
       pinned={
-        <div className="col" style={{ gap: 8 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              className={`chip ${tab === 'level' ? 'chip--active' : ''}`}
-              onClick={() => setTab('level')}
-            >
-              Level-up
-            </button>
-            <button
-              className={`chip ${tab === 'tm' ? 'chip--active' : ''}`}
-              onClick={() => setTab('tm')}
-            >
-              TMs
-            </button>
-          </div>
-          <input
-            className="sheet-search"
-            type="text"
-            placeholder="Search moves…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-          <div className="muted" style={{ fontSize: 12 }}>
-            {tab === 'level' ? 'Numbers = level learned' : '✓ = learns via TM'} · · = not learned
-          </div>
-        </div>
+        <MoveFilterBar
+          tab={tab}
+          onTab={setTab}
+          query={query}
+          onQuery={setQuery}
+          levelLabel="Level-up"
+          tmLabel="TMs"
+          legend={
+            <div className="muted" style={{ fontSize: 12 }}>
+              {tab === 'level' ? 'Numbers = level learned' : '✓ = learns via TM'} · · = not learned
+            </div>
+          }
+        />
       }
     >
       {family.length <= 1 ? (
@@ -544,8 +589,7 @@ export interface LearnsetSheetProps {
 export function LearnsetSheet({
   open, onClose, game, species, currentMoves, monLevel, ownedTmMoves, onAdd,
 }: LearnsetSheetProps) {
-  const [tab, setTab] = useState<'level' | 'tm'>('level')
-  const [query, setQuery] = useState('')
+  const { tab, setTab, query, setQuery, resetQuery } = useMoveFilter()
   const data = species ? game.species[species] : undefined
 
   const q = query.trim().toLowerCase()
@@ -559,7 +603,7 @@ export function LearnsetSheet({
   }, [data, q])
 
   function handleClose() {
-    setQuery('')
+    resetQuery()
     onClose()
   }
 
@@ -574,29 +618,14 @@ export function LearnsetSheet({
       title={species ? `${species} — learnset` : 'Learnset'}
       onClose={handleClose}
       pinned={
-        <div className="col" style={{ gap: 8 }}>
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button
-              className={`chip ${tab === 'level' ? 'chip--active' : ''}`}
-              onClick={() => setTab('level')}
-            >
-              Level-up ({data?.learnset.length ?? 0})
-            </button>
-            <button
-              className={`chip ${tab === 'tm' ? 'chip--active' : ''}`}
-              onClick={() => setTab('tm')}
-            >
-              TMs ({data?.tms?.length ?? 0})
-            </button>
-          </div>
-          <input
-            className="sheet-search"
-            type="text"
-            placeholder="Search…"
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-          />
-        </div>
+        <MoveFilterBar
+          tab={tab}
+          onTab={setTab}
+          query={query}
+          onQuery={setQuery}
+          levelLabel={`Level-up (${data?.learnset.length ?? 0})`}
+          tmLabel={`TMs (${data?.tms?.length ?? 0})`}
+        />
       }
     >
       <div>

@@ -10,7 +10,7 @@ import {
   MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet, ReplaceSlotSheet,
   EvolutionLearnsetSheet,
 } from './components/MoveSheets'
-import { NATURES, withDefaultMoves } from '../save/types'
+import { NATURES, withDefaults } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
 import type { StatKey, StatsTable, Trainer, TrainerSet, GameData } from '../data/types'
 import type { FieldState } from '../state/calcStore'
@@ -19,7 +19,8 @@ import { groupTrainersByLocation, displayLocation } from '../data/trainerGroups'
 function trainerSetToSetState(t: TrainerSet): SetState {
   return {
     species: t.species, level: t.level, nature: t.nature, ability: t.ability,
-    item: t.item, moves: t.moves, defaultMoves: [...t.moves], ivs: t.ivs, evs: t.evs ?? {},
+    item: t.item, moves: t.moves, defaultMoves: [...t.moves], originalSpecies: t.species,
+    ivs: t.ivs, evs: t.evs ?? {},
   }
 }
 
@@ -200,7 +201,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   const hasEvoLine = evolutions.length > 0 || (speciesData?.preEvolutions?.length ?? 0) > 0
   // Base-stat-total shift when previewing an evolution, vs the box original.
   const bstDelta = value?.originalSpecies && speciesData
-    ? sumStats(speciesData.baseStats) - sumStats(game.species[value.originalSpecies]?.baseStats)
+    ? sumStats(speciesData.baseStats) - sumStats(game.species[value.originalSpecies]?.baseStats ?? speciesData.baseStats)
     : 0
   // The headline numbers: actual stats at this level/nature/IV/EV spread.
   const stats = useMemo(() => {
@@ -236,7 +237,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   }
 
   function pickFromBox(s: SetState) {
-    onChange(withDefaultMoves({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
+    onChange(withDefaults({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
   }
 
   function pickTrainer(trainer: Trainer) {
@@ -327,16 +328,21 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   // A slot holds an override when its move wasn't in the original moveset.
   const isDefaultMove = (m: string) => !defaultMoves || defaultMoves.includes(m)
 
+  // Species overrides mirror move overrides: `originalSpecies` is the load-time
+  // baseline (stamped by withDefaults), and the mon is being previewed as an
+  // evolution whenever its current species differs from that baseline.
+  const originalSpecies = value?.originalSpecies
+  const speciesOverridden = !!originalSpecies && value!.species !== originalSpecies
+
   // Preview an evolution: swap the species (stats recompute from the new base
-  // stats) while remembering the first pre-evolution so it can be reverted.
+  // stats). The baseline is left untouched so "revert" can restore it.
   function evolveTo(into: string) {
     if (!value) return
-    onChange({ ...value, species: into, originalSpecies: value.originalSpecies ?? value.species })
+    onChange({ ...value, species: into })
   }
   function revertEvolution() {
     if (!value?.originalSpecies) return
-    const { originalSpecies, ...rest } = value
-    onChange({ ...rest, species: originalSpecies })
+    onChange({ ...value, species: value.originalSpecies })
   }
 
   return (
@@ -441,17 +447,17 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
               ))}
             </div>
           )}
-          {value && speciesData && (hasEvoLine || value.originalSpecies) && (
+          {value && speciesData && (hasEvoLine || speciesOverridden) && (
             <div className="col" style={{ gap: 4 }}>
               <div className="scroll-x" style={{ paddingBottom: 0, gap: 6 }}>
-                {value.originalSpecies && (
+                {speciesOverridden && (
                   <button
                     className="chip"
                     style={{ flexShrink: 0 }}
                     onClick={revertEvolution}
-                    title={`Revert to ${value.originalSpecies}`}
+                    title={`Revert to ${originalSpecies}`}
                   >
-                    ↺ {value.originalSpecies}
+                    ↺ {originalSpecies}
                   </button>
                 )}
                 {evolutions.map(evo => (
@@ -476,9 +482,9 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                   </button>
                 )}
               </div>
-              {value.originalSpecies && (
+              {speciesOverridden && (
                 <span className="muted" style={{ fontSize: 12 }}>
-                  Previewing evolution · BST {bstDelta >= 0 ? '+' : ''}{bstDelta} vs {value.originalSpecies}
+                  Previewing evolution · BST {bstDelta >= 0 ? '+' : ''}{bstDelta} vs {originalSpecies}
                 </span>
               )}
             </div>
@@ -758,7 +764,7 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
           items={boxSets}
           getLabel={s => `${s.species} (Lv ${s.level})`}
           onPick={(s) => {
-            addToAttackerParty(withDefaultMoves({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
+            addToAttackerParty(withDefaults({ ...s, moves: [...s.moves], ivs: { ...s.ivs }, evs: { ...s.evs } }))
             setShowPartyAddPicker(false)
           }}
           onClose={() => setShowPartyAddPicker(false)}

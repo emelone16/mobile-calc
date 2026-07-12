@@ -31,9 +31,12 @@ export interface SetState {
   paralyzed?: boolean
   source?: 'clipboard' | 'save'
   /**
-   * Set when the mon is being previewed as an evolution in the calc. Holds the
-   * species it was before the first evolve tap, so "revert" can restore the
-   * original box Pokémon. Absent means the mon is its own, un-previewed species.
+   * The mon's species as originally loaded (from the save/box/trainer), captured
+   * before any in-calc evolution preview. Evolving is a temporary override on top
+   * of this; "revert" restores it. The mon is being previewed as an evolution
+   * whenever `species` differs from this baseline. Absent only for sets that
+   * predate the feature, in which case the editor stamps it on load — mirroring
+   * `defaultMoves`.
    */
   originalSpecies?: string
 }
@@ -66,10 +69,16 @@ export interface SaveReader {
 
 export interface MappedMon extends SetState {}
 
-/** Stamp `defaultMoves` from the current moves if absent (idempotent). Call when
- *  a set is first loaded into the calc so its original moveset can be restored. */
-export function withDefaultMoves(s: SetState): SetState {
-  return s.defaultMoves ? s : { ...s, defaultMoves: [...s.moves] }
+/** Stamp the load-time baselines — `defaultMoves` and `originalSpecies` — if
+ *  absent, so in-calc move swaps and evolution previews can each be reset to the
+ *  originally-loaded value. Idempotent; call when a set is first loaded into the
+ *  calc. Both overrides follow the same shape: keep the baseline, detect an
+ *  override by comparing against it, and reset by restoring it (never deleting). */
+export function withDefaults(s: SetState): SetState {
+  let out = s
+  if (!out.defaultMoves) out = { ...out, defaultMoves: [...out.moves] }
+  if (!out.originalSpecies) out = { ...out, originalSpecies: out.species }
+  return out
 }
 
 /** RawMon -> SetState using enum tables (vanilla gen-4 or hack override). */
