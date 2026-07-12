@@ -117,7 +117,20 @@ function buildTrainerIndex(
 
 /** "Lvl 7 Youngster Tristan |Route 202| " -> "Youngster Tristan" */
 function parseTrainerName(setName: string): string {
-  return setName.replace(/^Lvl\s+\d+\s+/, '').replace(/\s*\|[^|]*\|\s*$/, '').trim()
+  const name = setName.replace(/^Lvl\s+\d+\s+/, '').replace(/\s*\|[^|]*\|\s*$/, '').trim()
+  return renameRival(name)
+}
+
+// The rival's battles ship under the ROM's internal placeholder name
+// "Pkmn Trainer Cedric" (every one carries Barry's signature team —
+// Staraptor, Heracross, Snorlax, Roserade/Azumarill, Arcanine, and a starter
+// countering yours). Nuzlocke players know this trainer as Barry, so
+// searching the picker for "Barry" turned up nothing and all his fights
+// looked missing. Surface him by his known name while keeping the per-battle
+// numeric suffix (Cedric4 -> Rival Barry4) so the separate fights stay
+// distinguishable.
+function renameRival(name: string): string {
+  return name.replace(/^Pkmn Trainer Cedric(?=\d*$)/, 'Rival Barry')
 }
 
 function deepFreeze<T>(o: T): T {
