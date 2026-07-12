@@ -8,7 +8,6 @@ import { getAllItemNames } from '../engine/generationsAdapter'
 import { SearchablePicker } from './components/BottomSheet'
 import {
   MoveTypeBadge, MoveDetailSheet, MoveChooserSheet, LearnsetSheet, ReplaceSlotSheet,
-  EvolutionLearnsetSheet,
 } from './components/MoveSheets'
 import { NATURES, withDefaults } from '../save/types'
 import type { SetState, BoostKey } from '../save/types'
@@ -171,7 +170,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
   // A move waiting for the user to choose which full-set slot it replaces.
   const [pendingReplace, setPendingReplace] = useState<string | null>(null)
   const [showLearnset, setShowLearnset] = useState(false)
-  const [showEvoLearnsets, setShowEvoLearnsets] = useState(false)
   const [showTrainerPicker, setShowTrainerPicker] = useState(false)
   const [expanded, setExpanded] = useState(false)
   const [showBoosts, setShowBoosts] = useState(false)
@@ -472,15 +470,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
                     <span className="muted" style={{ marginLeft: 4, fontSize: 11 }}>{evo.method}</span>
                   </button>
                 ))}
-                {hasEvoLine && (
-                  <button
-                    className="chip"
-                    style={{ flexShrink: 0 }}
-                    onClick={() => setShowEvoLearnsets(true)}
-                  >
-                    ⇋ Learnsets
-                  </button>
-                )}
               </div>
               {speciesOverridden && (
                 <span className="muted" style={{ fontSize: 12 }}>
@@ -849,12 +838,6 @@ function MonEditor({ label, game, value, opponent, onChange }: MonEditorProps) {
           if (pendingReplace) replaceMoveAt(i, pendingReplace)
           setPendingReplace(null)
         }}
-      />
-      <EvolutionLearnsetSheet
-        open={showEvoLearnsets}
-        onClose={() => setShowEvoLearnsets(false)}
-        game={game}
-        species={value?.species}
       />
     </div>
   )
