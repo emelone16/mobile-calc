@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { useGameStore } from '../state/gameStore'
 import { BottomSheet } from './components/BottomSheet'
-import { ENCOUNTER_METHODS, type EncounterMethod, type WildEncounter } from '../data/types'
+import { ENCOUNTER_METHODS, type EncounterMethod, type EncounterLocation, type WildEncounter } from '../data/types'
 
 // Sprite icons come from the same source the Box screen uses.
 function toSpriteName(species: string): string {
@@ -31,6 +31,43 @@ function byRate(a: WildEncounter, b: WildEncounter): number {
   return (b.rate ?? -1) - (a.rate ?? -1)
 }
 
+// Morning/day/night share a species pool at most locations, so we collapse
+// them into one grass table with a rate column per time of day.
+const GRASS_METHODS = ['morning', 'day', 'night'] as const
+type GrassMethod = (typeof GRASS_METHODS)[number]
+const GRASS_SHORT: Record<GrassMethod, string> = { morning: 'Morn', day: 'Day', night: 'Night' }
+const NON_GRASS_METHODS = ENCOUNTER_METHODS.filter(
+  (m): m is Exclude<EncounterMethod, GrassMethod> => !(GRASS_METHODS as readonly string[]).includes(m),
+)
+
+interface GrassRow {
+  pokemon: string
+  levels: [number, number]
+  rates: Partial<Record<GrassMethod, number | null>>
+}
+
+/** Union the M/D/N slots into per-species rows, ranked by best rate. */
+function buildGrass(loc: EncounterLocation): { times: GrassMethod[]; rows: GrassRow[] } {
+  const times = GRASS_METHODS.filter(m => (loc.encounters[m]?.length ?? 0) > 0)
+  const order: string[] = []
+  const byMon = new Map<string, GrassRow>()
+  for (const m of times) {
+    for (const e of loc.encounters[m]!) {
+      let row = byMon.get(e.pokemon)
+      if (!row) {
+        row = { pokemon: e.pokemon, levels: [e.levels[0], e.levels[1]], rates: {} }
+        byMon.set(e.pokemon, row)
+        order.push(e.pokemon)
+      }
+      row.levels = [Math.min(row.levels[0], e.levels[0]), Math.max(row.levels[1], e.levels[1])]
+      row.rates[m] = e.rate
+    }
+  }
+  const best = (r: GrassRow) => Math.max(...times.map(t => r.rates[t] ?? -1))
+  const rows = order.map(n => byMon.get(n)!).sort((a, b) => best(b) - best(a))
+  return { times, rows }
+}
+
 type Mode = 'location' | 'pokemon'
 
 /** Where a species appears: one row per location+method it's found in. */
@@ -40,14 +77,73 @@ interface Sighting {
   enc: WildEncounter
 }
 
-function Sprite({ species }: { species: string }) {
+function Sprite({ species, size = 40 }: { species: string; size?: number }) {
   return (
     <img
       src={iconUrl(species)}
       alt=""
-      style={{ width: 40, height: 40, imageRendering: 'pixelated', flexShrink: 0 }}
+      style={{ width: size, height: size, imageRendering: 'pixelated', flexShrink: 0 }}
       onError={e => { (e.target as HTMLImageElement).style.visibility = 'hidden' }}
     />
+  )
+}
+
+/** The per-location detail: dense grass grid + compact rows for other methods. */
+function LocationDetail({ loc }: { loc: EncounterLocation }) {
+  const grass = buildGrass(loc)
+  const otherMethods = NON_GRASS_METHODS.filter(m => (loc.encounters[m]?.length ?? 0) > 0)
+
+  return (
+    <div>
+      {grass.rows.length > 0 && (
+        <div className="enc-section">
+          <div className="label" style={{ marginBottom: 'var(--sp-1)' }}>Grass</div>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="enc-table">
+              <thead>
+                <tr>
+                  <th className="enc-name">Pokémon</th>
+                  <th>Lv</th>
+                  {grass.times.map(t => <th key={t}>{GRASS_SHORT[t]}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {grass.rows.map(row => (
+                  <tr key={row.pokemon}>
+                    <td className="enc-name">
+                      <span className="enc-name-inner">
+                        <Sprite species={row.pokemon} size={24} />
+                        {row.pokemon}
+                      </span>
+                    </td>
+                    <td className="enc-lv">{formatLevels(row.levels)}</td>
+                    {grass.times.map(t => (
+                      <td key={t} className={row.rates[t] == null ? 'enc-rate--none' : undefined}>
+                        {t in row.rates ? formatRate(row.rates[t] ?? null) : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {otherMethods.map(method => (
+        <div key={method} className="enc-section">
+          <div className="label" style={{ marginBottom: 'var(--sp-1)' }}>{METHOD_LABELS[method]}</div>
+          {[...loc.encounters[method]!].sort(byRate).map((enc, i) => (
+            <div key={`${enc.pokemon}-${i}`} className="enc-row">
+              <Sprite species={enc.pokemon} size={24} />
+              <span className="enc-row__name">{enc.pokemon}</span>
+              <span className="enc-row__lv">{formatLevels(enc.levels)}</span>
+              <span className="enc-row__rate">{formatRate(enc.rate)}</span>
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -160,35 +256,13 @@ export function EncountersScreen() {
         </div>
       )}
 
-      {/* Location detail: every method and its slots. */}
+      {/* Location detail: a dense grass table + compact rows per method. */}
       <BottomSheet
         open={!!activeLocation}
         title={activeLocation?.name}
         onClose={() => setOpenLocation(null)}
       >
-        <div className="col" style={{ gap: 'var(--sp-4)' }}>
-          {activeLocation && ENCOUNTER_METHODS
-            .filter(m => (activeLocation.encounters[m]?.length ?? 0) > 0)
-            .map(method => (
-              <div key={method} className="col">
-                <div className="label">{METHOD_LABELS[method]}</div>
-                {[...activeLocation.encounters[method]!].sort(byRate).map((enc, i) => (
-                  <div key={`${enc.pokemon}-${i}`} className="card row--between">
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <Sprite species={enc.pokemon} />
-                      <div>
-                        <div style={{ fontWeight: 700 }}>{enc.pokemon}</div>
-                        <div className="muted" style={{ fontSize: 'var(--fs-xs)' }}>{formatLevels(enc.levels)}</div>
-                      </div>
-                    </div>
-                    <span style={{ fontVariantNumeric: 'tabular-nums', color: 'var(--text-dim)' }}>
-                      {formatRate(enc.rate)}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            ))}
-        </div>
+        {activeLocation && <LocationDetail loc={activeLocation} />}
       </BottomSheet>
 
       {/* Species detail: every location + method it's found in. */}
