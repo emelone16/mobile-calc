@@ -42,6 +42,18 @@ describe('composed GameData', () => {
     expect(Object.keys(game.trainers.byLocation).length).toBeGreaterThan(0)
   })
 
+  it('surfaces the rival as Barry (ROM ships him as "Pkmn Trainer Cedric")', () => {
+    const names = game.trainers.order.map(id => game.trainers.byId[id]!.name)
+    // The internal placeholder name must not leak into the picker...
+    expect(names.some(n => n.includes('Cedric'))).toBe(false)
+    // ...and the rival's fights are now findable under "Barry".
+    const barry = names.filter(n => n.startsWith('Rival Barry'))
+    expect(barry.length).toBeGreaterThan(0)
+    // The per-battle numeric suffix is preserved so fights stay distinct.
+    expect(barry).toContain('Rival Barry')
+    expect(barry.some(n => /^Rival Barry\d+$/.test(n))).toBe(true)
+  })
+
   it('is deeply frozen (immutable data layer)', () => {
     expect(Object.isFrozen(game)).toBe(true)
     expect(Object.isFrozen(game.species)).toBe(true)
