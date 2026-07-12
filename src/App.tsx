@@ -6,6 +6,7 @@ import { BottomNav } from './ui/BottomNav'
 import { CalcScreen } from './ui/CalcScreen'
 import { BoxScreen } from './ui/BoxScreen'
 import { FieldScreen } from './ui/FieldScreen'
+import { EncountersScreen } from './ui/EncountersScreen'
 
 export function App() {
   const { status, load } = useGameStore()
@@ -21,6 +22,7 @@ export function App() {
                 <Route path="/" element={<CalcScreen />} />
                 <Route path="/box" element={<BoxScreen />} />
                 <Route path="/field" element={<FieldScreen />} />
+                <Route path="/encounters" element={<EncountersScreen />} />
               </Routes>}
         </main>
         <BottomNav />

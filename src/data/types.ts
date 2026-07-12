@@ -40,6 +40,31 @@ export interface PreEvolution {
 /** Forward evolution map keyed by species name (the companion data file). */
 export type EvolutionBundle = Record<string, Evolution[]>
 
+/** The wild-encounter methods RP ships, in a sensible display order. */
+export const ENCOUNTER_METHODS = [
+  'morning', 'day', 'night', 'pokeradar', 'honeytree',
+  'surf', 'oldrod', 'goodrod', 'superrod', 'gift', 'special',
+] as const
+export type EncounterMethod = (typeof ENCOUNTER_METHODS)[number]
+
+/** A single wild-encounter slot in one location under one method. */
+export interface WildEncounter {
+  pokemon: string
+  /** Encounter chance as a percentage; `null` for fixed gift/special slots. */
+  rate: number | null
+  /** `[min, max]` level range (equal for fixed-level slots). */
+  levels: [number, number]
+}
+
+/** One location's wild encounters, grouped by method. */
+export interface EncounterLocation {
+  name: string
+  encounters: Partial<Record<EncounterMethod, WildEncounter[]>>
+}
+
+/** The wild-encounter companion file: locations in game-progression order. */
+export type EncounterBundle = EncounterLocation[]
+
 export interface SpeciesData {
   name: string
   baseStats: StatsTable
@@ -127,6 +152,8 @@ export interface GameData {
   moves: Record<string, MoveData>
   trainers: TrainerIndex
   moveReplacements: Record<string, string>
+  /** Wild-encounter locations in game order; present when the hack ships them. */
+  encounters?: EncounterBundle
   /** present only for reindexing hacks; RP -> undefined */
   saveEnums?: SaveEnums
 }
